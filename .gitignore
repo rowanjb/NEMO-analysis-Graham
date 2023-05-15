@@ -1,0 +1,26 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!ANHA4_mesh_mask.nc
+!ARGOProfiles_mask.nc
+!EKE.py
+!EKE_timeseries.py
+!MLD_timeseries.py
+!RUN_MATLAB.sh
+!RUN_PYTHON.sh
+!filepaths.py
+!heat.py
+!heat_comparing.py
+!salt.py
+!volume.py
+
+!convectiveResistance.py
+!density.py               
+!LSmap.py                 
+
+#...and also consider files in sub-directories
+!*/
+
+# ...even if they are in subdirectories
