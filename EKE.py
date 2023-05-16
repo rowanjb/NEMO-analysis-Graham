@@ -1,6 +1,3 @@
-###you're gonna have to make an nc file for each day :(
-
-
 #exports dataarray of EKE in each cell for ANHA4 runs
 #Rowan Brown
 #May 5, 2023
@@ -8,6 +5,8 @@
 import numpy as np 
 import xarray as xr
 import os
+import datetime
+import matplotlib.dates as mdates
 
 #specify the run
 run = 'EPM151'
@@ -31,11 +30,18 @@ with open(gridV_txt) as f:
     lines = f.readlines()
 filepaths_gridV = [line.strip() for line in lines]
 
-#open the datasets
+#preprocessing
 preprocess_gridU = lambda ds: ds[['e3u','vozocrtx']] #desired variables
-DSU = xr.open_mfdataset(filepaths_gridU[::600],preprocess=preprocess_gridU) #opens dataset
 preprocess_gridV = lambda ds: ds[['e3v','vomecrty']] #desired variables
-DSV = xr.open_mfdataset(filepaths_gridV[::600],preprocess=preprocess_gridV) #opens dataset
+
+#creating directory if doesn't already exist
+dir = 'EKE_' + run + '/'
+if not os.path.exists(dir):
+    os.makedirs(dir)
+
+#open the datasets
+DSU = xr.open_mfdataset(filepaths_gridU[:73],preprocess=preprocess_gridU) #opens dataset
+DSV = xr.open_mfdataset(filepaths_gridV[:73],preprocess=preprocess_gridV) #opens dataset
 
 #renaming dimensions so that they are the same for both velocity components
 DSU = DSU.rename({'depthu': 'z'})  
@@ -55,10 +61,12 @@ DSV = DSV.interp(y=DSV.y-0.5)
 DSU_bar_sqr = (DSU-DSU.rolling(time_counter=5,center=True).mean())**2 
 DSV_bar_sqr = (DSV-DSV.rolling(time_counter=5,center=True).mean())**2
 EKE = (DSU_bar_sqr.vozocrtx + DSV_bar_sqr.vomecrty)/2 #DataArray
+EKE = EKE.drop_vars('time_centered')
 
-EKE.drop_vars('time_centered')
+#saving one .nc file per time_counter (basically every 5 days)
+dates = EKE.indexes['time_counter'].to_datetimeindex(unsafe=True) #Beware: warning turned off!!
+for i,date in enumerate(dates):
+    path = dir + 'EKE_' + run + '_' + str(date.date()) + '.nc'
+    EKE.isel(time_counter=i).to_netcdf(path)
 
-print(EKE)
-quit()
-
-EKE.to_netcdf('EKE_' + run + '.nc')
+#EKE.to_netcdf('EKE_' + run + '.nc')

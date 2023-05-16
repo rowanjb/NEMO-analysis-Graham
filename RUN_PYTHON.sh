@@ -8,14 +8,15 @@
 #SBATCH -J EKE_EPM151
 #SBATCH --ntasks=1
 #SBATCH --mem=16000
-#SBATCH -t 0-10:00        ## 0 day, 2 hour, 0 minutes
+#SBATCH -t 0-10:00 
 #SBATCH -o slurm-mem-%j.out
 #SBATCH -e slurm-mem-%j.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=rowan2@ualberta.ca
 
+#module load StdEnv/2020 gcc/9.3.0
+#module load gdal/3.5.1 
 module load python/3.10
-module load geos
 
 source /home/rowan/snakes2/bin/activate
-python /home/rowan/projects/rrg-pmyers-ad/rowan/EKE.py
+python /home/rowan/projects/rrg-pmyers-ad/rowan/NEMO-analysis-Graham/EKE.py
