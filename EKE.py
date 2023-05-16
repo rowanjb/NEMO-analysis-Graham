@@ -9,7 +9,7 @@ import datetime
 import matplotlib.dates as mdates
 
 #specify the run
-run = 'EPM151'
+run = 'EPM152'
 
 #mask for land, bathymetry, etc. to reduce computational cost
 with xr.open_dataset('ANHA4_mesh_mask.nc') as DS:
@@ -34,14 +34,14 @@ filepaths_gridV = [line.strip() for line in lines]
 preprocess_gridU = lambda ds: ds[['e3u','vozocrtx']] #desired variables
 preprocess_gridV = lambda ds: ds[['e3v','vomecrty']] #desired variables
 
-#creating directory if doesn't already exist
-dir = 'EKE_' + run + '/'
-if not os.path.exists(dir):
-    os.makedirs(dir)
+##creating directory if doesn't already exist
+#dir = 'EKE_' + run + '/'
+#if not os.path.exists(dir):
+#    os.makedirs(dir)
 
 #open the datasets
-DSU = xr.open_mfdataset(filepaths_gridU[:73],preprocess=preprocess_gridU) #opens dataset
-DSV = xr.open_mfdataset(filepaths_gridV[:73],preprocess=preprocess_gridV) #opens dataset
+DSU = xr.open_mfdataset(filepaths_gridU,preprocess=preprocess_gridU) #opens dataset
+DSV = xr.open_mfdataset(filepaths_gridV,preprocess=preprocess_gridV) #opens dataset
 
 #renaming dimensions so that they are the same for both velocity components
 DSU = DSU.rename({'depthu': 'z'})  
@@ -63,10 +63,16 @@ DSV_bar_sqr = (DSV-DSV.rolling(time_counter=5,center=True).mean())**2
 EKE = (DSU_bar_sqr.vozocrtx + DSV_bar_sqr.vomecrty)/2 #DataArray
 EKE = EKE.drop_vars('time_centered')
 
-#saving one .nc file per time_counter (basically every 5 days)
-dates = EKE.indexes['time_counter'].to_datetimeindex(unsafe=True) #Beware: warning turned off!!
-for i,date in enumerate(dates):
-    path = dir + 'EKE_' + run + '_' + str(date.date()) + '.nc'
-    EKE.isel(time_counter=i).to_netcdf(path)
+#masking the LS convection region
+with xr.open_dataset('ARGOProfiles_mask.nc') as DS:
+    LS_convec_mask = DS.tmask.fillna(0).to_numpy()
+EKE.coords['LS_convec_mask'] = (('y', 'x'), LS_convec_mask) #add mask as coords
+EKE = EKE.where(EKE.LS_convec_mask == 1, drop=True) #drop data outside of mask
 
-#EKE.to_netcdf('EKE_' + run + '.nc')
+##saving one .nc file per time_counter (basically every 5 days)
+#dates = EKE.indexes['time_counter'].to_datetimeindex(unsafe=True) #Beware: warning turned off!!
+#for i,date in enumerate(dates):
+#    path = dir + 'EKE_' + run + '_' + str(date.date()) + '.nc'
+#    EKE.isel(time_counter=i).to_netcdf(path)
+
+EKE.to_netcdf('EKE_' + run + '_LSCR.nc')

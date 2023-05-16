@@ -5,7 +5,7 @@
 ##          Copied 27 Feb 2023 by rowan2@ualberta.ca                  ##
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
 #SBATCH -A rrg-pmyers-ad
-#SBATCH -J EKE_EPM151
+#SBATCH -J EKE_EPM152
 #SBATCH --ntasks=1
 #SBATCH --mem=16000
 #SBATCH -t 0-10:00 
