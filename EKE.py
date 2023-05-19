@@ -1,43 +1,38 @@
-#exports dataarray of EKE in each cell for ANHA4 runs
+#exports dataarray of EKE for ANHA4 runs
 #Rowan Brown
 #May 5, 2023
 
 import numpy as np 
 import xarray as xr
 import os
-import datetime
-import matplotlib.dates as mdates
 
-#specify the run
-run = 'EPM152'
+#user specs
+run = 'EPM151' #specify the run
+window = 5 #specify the rolling window
+maxDepth = 450 #specify the integration depths 
 
 #mask for land, bathymetry, etc. to reduce computational cost
 with xr.open_dataset('ANHA4_mesh_mask.nc') as DS:
     tmask = DS.tmask[0,:,:,:].to_numpy() #DataArray with dims (t: 1, z: 50, y: 800, x: 544) 
 
-#I have text files that list all the non-empty model runs 
-#there is one text file per .nc type, i.e. gridT, gridW, icemod, etc.
-#each run has a folder (e.g. EPM151_filepaths) containing the associated text files
-#the gridV and gridU paths are:
+#getting the grid T (I think, check this) lats and lons
+with xr.open_dataset('ANHA4_mesh_mask.nc') as DS:
+    lons = DS.variables['nav_lon']
+    lats = DS.variables['nav_lat']
+
+#text files with lists of all non-empty model outputs
 gridU_txt = run + '_filepaths/' + run + '_gridU_filepaths.txt'
 gridV_txt = run + '_filepaths/' + run + '_gridV_filepaths.txt'
 
 #open the text files and get lists of the .nc output filepaths
-with open(gridU_txt) as f: 
-    lines = f.readlines()
+with open(gridU_txt) as f: lines = f.readlines()
 filepaths_gridU = [line.strip() for line in lines]
-with open(gridV_txt) as f: 
-    lines = f.readlines()
+with open(gridV_txt) as f: lines = f.readlines()
 filepaths_gridV = [line.strip() for line in lines]
 
 #preprocessing
 preprocess_gridU = lambda ds: ds[['e3u','vozocrtx']] #desired variables
 preprocess_gridV = lambda ds: ds[['e3v','vomecrty']] #desired variables
-
-##creating directory if doesn't already exist
-#dir = 'EKE_' + run + '/'
-#if not os.path.exists(dir):
-#    os.makedirs(dir)
 
 #open the datasets
 DSU = xr.open_mfdataset(filepaths_gridU,preprocess=preprocess_gridU) #opens dataset
@@ -57,22 +52,41 @@ DSU = DSU.where(DSU.tmask == 1) #drop data outside of mask
 DSU = DSU.interp(x=DSU.x+0.5)
 DSV = DSV.interp(y=DSV.y-0.5)
 
-#EKE calculations
-DSU_bar_sqr = (DSU-DSU.rolling(time_counter=5,center=True).mean())**2 
-DSV_bar_sqr = (DSV-DSV.rolling(time_counter=5,center=True).mean())**2
+#re-mapping x and y so they're consistent with the T grid
+DSU = DSU.assign_coords(x=DSU.x-0.5)
+DSV = DSV.assign_coords(y=DSV.y+0.5)
+
+#EKE calculations (change back to 5 for actual calculations)
+DSU_bar_sqr = (DSU-DSU.rolling(time_counter=window,center=True).mean())**2 
+DSV_bar_sqr = (DSV-DSV.rolling(time_counter=window,center=True).mean())**2
 EKE = (DSU_bar_sqr.vozocrtx + DSV_bar_sqr.vomecrty)/2 #DataArray
+
+#dropping unnecessary coordinate
 EKE = EKE.drop_vars('time_centered')
 
-#masking the LS convection region
-with xr.open_dataset('ARGOProfiles_mask.nc') as DS:
-    LS_convec_mask = DS.tmask.fillna(0).to_numpy()
-EKE.coords['LS_convec_mask'] = (('y', 'x'), LS_convec_mask) #add mask as coords
-EKE = EKE.where(EKE.LS_convec_mask == 1, drop=True) #drop data outside of mask
+#add grid T lat and lons and drop values outside the Labrador Sea 
+EKE.coords['nav_lat'] = (('y', 'x'), lats) 
+EKE.coords['nav_lon'] = (('y', 'x'), lons)
+#EKE = EKE.where(EKE.nav_lat > 50, drop=True)
+#EKE = EKE.where(EKE.nav_lat < 70, drop = True)
+#EKE = EKE.where(EKE.nav_lon > -65, drop=True)
+#EKE = EKE.where(EKE.nav_lon < -40, drop=True)
 
-##saving one .nc file per time_counter (basically every 5 days)
-#dates = EKE.indexes['time_counter'].to_datetimeindex(unsafe=True) #Beware: warning turned off!!
-#for i,date in enumerate(dates):
-#    path = dir + 'EKE_' + run + '_' + str(date.date()) + '.nc'
-#    EKE.isel(time_counter=i).to_netcdf(path)
+##masking the LS convection region
+#with xr.open_dataset('ARGOProfiles_mask.nc') as DS:
+#    LS_convec_mask = DS.tmask.fillna(0).to_numpy()
+#EKE.coords['LS_convec_mask'] = (('y', 'x'), LS_convec_mask) #add mask as coords
+#EKE = EKE.where(EKE.LS_convec_mask == 1)#, drop=True) #drop data outside of mask
+#EKE = EKE.drop_vars('LS_convec_mask')
 
-EKE.to_netcdf('EKE_' + run + '_LSCR.nc')
+#dropping below a certain depth
+EKE = EKE.where(EKE.z < maxDepth, drop=True) #drop data outside of mask
+
+#summing in vertical dimension
+EKE = EKE.sum(dim='z')
+
+#taking average in time
+EKE = EKE.mean(dim='time_counter')
+
+#Saving
+EKE.to_netcdf('EKE_' + run + '_' + str(maxDepth) + '.nc')

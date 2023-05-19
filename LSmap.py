@@ -89,8 +89,12 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName):
         gl.xlabel_style = {'size': 9}
         gl.ylabel_style = {'size': 9}
 	
-        #get date
-        date = xrData["time_counter"].dt.strftime("%Y-%m-%d").to_numpy()
+        ##get date
+        #date = xrData["time_counter"].dt.strftime("%Y-%m-%d").to_numpy()
+
+        ##temporary debugging (DELETE THIS?)
+        #lons = xrData.nav_lon
+        #lats = xrData.nav_lat
 
         #plotting data
         p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap='gist_ncar', vmin=min, vmax=max)
@@ -101,10 +105,10 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName):
         cb.ax.set_ylabel(CBlabel)
 
         #title
-        ax.set_title(title + ' ' + date)#,fontdict={'fontsize': 12})
+        ax.set_title(title)# + ' ' + date)#,fontdict={'fontsize': 12})
 
         #save and close figure
-        plt.savefig(fileName + date + '.png',dpi=900, bbox_inches="tight")
+        plt.savefig(fileName + '.png',dpi=300, bbox_inches="tight")
         plt.clf
 
         

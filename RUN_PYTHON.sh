@@ -5,9 +5,9 @@
 ##          Copied 27 Feb 2023 by rowan2@ualberta.ca                  ##
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
 #SBATCH -A rrg-pmyers-ad
-#SBATCH -J EKE_EPM152
+#SBATCH -J EKE_EPM151
 #SBATCH --ntasks=1
-#SBATCH --mem=16000
+#SBATCH --mem=50000
 #SBATCH -t 0-10:00 
 #SBATCH -o slurm-mem-%j.out
 #SBATCH -e slurm-mem-%j.err
