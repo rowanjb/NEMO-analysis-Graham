@@ -7,9 +7,10 @@ import xarray as xr
 import os
 
 #user specs
-run = 'EPM151' #specify the run
+run = 'EPM158' #specify the run
 window = 5 #specify the rolling window
 maxDepth = 450 #specify the integration depths 
+includeShelves = 'yes' #whether to calculate EKE on the shelves; yes==50g mem, no==60g mem
 
 #mask for land, bathymetry, etc. to reduce computational cost
 with xr.open_dataset('ANHA4_mesh_mask.nc') as DS:
@@ -83,13 +84,14 @@ EKE.coords['nav_lon'] = (('y', 'x'), lons)
 EKE = EKE.where(EKE.z < maxDepth, drop=True) #drop data outside of mask
 
 #getting time-averaged pelagic EKE 
-notnulls = EKE.isel(time_counter=3).isel(z=-1).notnull() #identifying shelves
-EKE = EKE.sum(dim='z') #summing in z direction
-EKE = EKE.mean(dim='time_counter') #taking average in time
-EKE = EKE.where(notnulls) #turning values on the shelves to NaNs
-
-#dropping (more) unnecessary coordinates
-EKE = EKE.drop_vars(['time_counter','z'])
-
-#Saving
-EKE.to_netcdf('EKE_avg_' + run + '_' + str(maxDepth) + '.nc')
+if includeShelves == 'yes':
+    EKE = EKE.sum(dim='z') #summing in z direction
+    EKE = EKE.mean(dim='time_counter') #taking average in time
+    EKE = EKE.drop_vars('time_counter') #drop time_counter coordinate
+    EKE.to_netcdf('EKE_avg_' + run + '_' + str(maxDepth) + '_incShelf.nc') #saving
+elif includeShelves == 'no':
+    notnulls = EKE.isel(time_counter=3).isel(z=-1).notnull() #identifying shelves
+    EKE = EKE.sum(dim='z') #summing in z direction
+    EKE = EKE.mean(dim='time_counter') #taking average in time
+    EKE = EKE.where(notnulls) #turning values on the shelves to NaNs
+    EKE.to_netcdf('EKE_avg_' + run + '_' + str(maxDepth) + '_noShelf.nc') #saving

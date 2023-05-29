@@ -6,7 +6,7 @@ import xarray as xr
 import os
 
 #run
-run = 'EPM158'
+run = 'EPM157'
 
 #directory of nemo output files on graham
 nemo_output_dir = '/home/rowan/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-' + run + '-S/'
