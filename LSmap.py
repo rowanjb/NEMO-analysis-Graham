@@ -10,6 +10,8 @@ import matplotlib.path as mpath
 import cartopy.crs as ccrs
 import cartopy.feature as feature
 import matplotlib.ticker as mticker
+import matplotlib.colors as colors
+import numpy as np
 
 westLon = -70
 eastLon = -35
@@ -17,20 +19,24 @@ northLat = 75
 southLat = 45
 
 def xrLSminmax(xrData,lats,lons):
-        """ Finds min and max values in xr data containing the Labrador Sea.
-        These are principally for later use in defining a colourbar range.
+        """ Finds min and max values in xarray dataarrays (and datasets??) in the Labrador Sea.
+        Principally for later use in defining a colourbar range.
         
                 Parameters:
-                        xrData: DataArray containing data to be plotted
+                        xrData: Dataarray containing data to be plotted
                         lats:   2D array of cell latitudes from .nc grid file
                         lons:   2D array of cell longitudes from .nc grid file
                         
                 Returns:
-                        Tuple containing min and max values in the DataArray
+                        Tuple containing min and max values
         """
 
         #define Labrador Sea region
         cond = ((lats > southLat) & (lats < northLat) & (lons < eastLon) & (lons > westLon))
+
+        #changing masked values (which are often zero) to nan
+        xrData = xrData.where(xrData!=0)
+        print("Don't forget: xrLSminmax replaces 0s with NaNs; may be unphysical") 
 
         #find min and max values within Labrador Sea region
         max = xrData.where(cond).max(skipna=True).to_numpy()
@@ -38,7 +44,7 @@ def xrLSminmax(xrData,lats,lons):
 
         return min, max
 
-def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName):
+def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName,scale='normal'):
         """ Saves one PNG map of Labrador Sea with data from an xarray DataArray. 
         
                 Parameters:
@@ -54,7 +60,7 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName):
                                         E.g., 'Sea surface height (EPM151)' + ' ' + date
                         fileName:       String for the name of the PNG(s)
                                         E.g., 'LS_convective_energy_EPM151_' + date + '.png'
-                        
+                        scale:          Optional (default = 'normal'), can set to 'log'
                 Returns:
                         None
         """
@@ -97,12 +103,60 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName):
         #lats = xrData.nav_lat
 
         #plotting data
-        p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap='gist_ncar', vmin=min, vmax=max)
+        if scale == 'normal':
+            p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), vmin=min, vmax=max, cmap='gist_ncar')
+            ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
+            cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
+            cb.ax.set_ylabel(CBlabel)
+        elif scale == 'log':
+            if (min>0 and max>0) or (min<0 and max<0): #minmax range doesn't contain zero
+                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), norm=colors.LogNorm(vmin=min, vmax=max, clip=True), cmap='gist_ncar')
+                ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
+                cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
+                cb.ax.set_ylabel(CBlabel)
+            elif (min<0 and max>0): #minmax range contains zero
+                print("Don't forget: the log scale is linearized around zero; you can play with parameters to adjust the colour bar")
+                lt = 10
+                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap='gist_ncar', norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
+                ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
+                #formatter = mticker.LogFormatter(base=10, labelOnlyBase=False, minor_thresholds=(50,40), linthresh=lt)
+                cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
+                cb.ax.set_ylabel(CBlabel)
+                #cb.ax.minorticks_on()
+                ##minorticks = p1.norm(np.arange(0,10,1))
+                ##cb.ax.yaxis.set_ticks(minorticks, minor=True)
+            elif min==0 and max>0:
+                print("Don't forget: the log scale is linearized just above zero; you can play with parameters to adjust the colour bar")
+                lt = 10
+                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap='gist_ncar', norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
+                p1.set_clim(0,max)
+                ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
+                formatter = mticker.LogFormatter(base=10, labelOnlyBase=False, minor_thresholds=(50,40), linthresh=lt)
+                cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical', format=formatter)
+                #cb.ax.mappable.set_clim(vmin=0,vmax=max)
+                cb.ax.set_ylabel(CBlabel)
+            elif max==0 and min<0:
+                print("Don't forget: the log scale is linearized just below zero; you can play with parameters to adjust the colour bar")
+                lt = 10
+                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap='gist_ncar', norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
+                p1.set_clim(0,max)
+                ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
+                formatter = mticker.LogFormatter(base=10, labelOnlyBase=False, minor_thresholds=(50,40), linthresh=lt)
+                cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical', format=formatter)
+                #cb.ax.mappable.set_clim(vmin=0,vmax=max)
+                cb.ax.set_ylabel(CBlabel)
+            else:
+                print("The chosen bounds don't work with log scale")
+        else:
+            print("Scale need to be 'log' or 'normal'")
 
         #colourbar 
-        ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
-        cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
-        cb.ax.set_ylabel(CBlabel)
+        #ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
+        #cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
+        #if scale == 'log':
+        #    formatter = mticker.LogFormatter(10, labelOnlyBase=False) 
+        #    cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical', ticks=[min,max], format=formatter)
+        #cb.ax.set_ylabel(CBlabel)
 
         #title
         ax.set_title(title)# + ' ' + date)#,fontdict={'fontsize': 12})
@@ -110,5 +164,3 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName):
         #save and close figure
         plt.savefig(fileName + '.png',dpi=300, bbox_inches="tight")
         plt.clf
-
-        

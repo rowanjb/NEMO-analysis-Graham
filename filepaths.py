@@ -1,4 +1,4 @@
-#get list of files that don't give "all nan slice" errors
+#identifies and removes gridT, gridU, and gridV files that give "all nan slice" errors
 #Rowan Brown
 #May 8, 2023
 
@@ -29,9 +29,25 @@ for filepath in filepaths_gridT:
         bad_files.append(filepath) #saving any bad filepaths
         print(filepath)
 
+#testing if gridU files are read-able
+for filepath in filepaths_gridU:
+    try:
+        DS = xr.open_dataset(filepath)
+    except:
+        bad_files.append(filepath) #saving any bad filepaths
+        print(filepath)
+
+#testing if gridV files are read-able
+for filepath in filepaths_gridV:
+    try:
+        DS = xr.open_dataset(filepath)
+    except:
+        bad_files.append(filepath) #saving any bad filepaths
+        print(filepath)
+
 #removing bad filepaths
 for bad_file in bad_files:
-    filepaths_gridT.remove(bad_file)
+    filepaths_gridT.remove(bad_file[:-4] + 'T.nc')
     filepaths_gridU.remove(bad_file[:-4] + 'U.nc')
     filepaths_gridV.remove(bad_file[:-4] + 'V.nc')
     filepaths_gridB.remove(bad_file[:-4] + 'B.nc')

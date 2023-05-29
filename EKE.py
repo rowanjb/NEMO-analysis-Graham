@@ -35,8 +35,8 @@ preprocess_gridU = lambda ds: ds[['e3u','vozocrtx']] #desired variables
 preprocess_gridV = lambda ds: ds[['e3v','vomecrty']] #desired variables
 
 #open the datasets
-DSU = xr.open_mfdataset(filepaths_gridU,preprocess=preprocess_gridU) #opens dataset
-DSV = xr.open_mfdataset(filepaths_gridV,preprocess=preprocess_gridV) #opens dataset
+DSU = xr.open_mfdataset(filepaths_gridU,preprocess=preprocess_gridU,engine="netcdf4") #opens dataset
+DSV = xr.open_mfdataset(filepaths_gridV,preprocess=preprocess_gridV,engine="netcdf4") #opens dataset
 
 #renaming dimensions so that they are the same for both velocity components
 DSU = DSU.rename({'depthu': 'z'})  
@@ -64,7 +64,7 @@ EKE = (DSU_bar_sqr.vozocrtx + DSV_bar_sqr.vomecrty)/2 #DataArray
 #dropping unnecessary coordinate
 EKE = EKE.drop_vars('time_centered')
 
-#add grid T lat and lons and drop values outside the Labrador Sea 
+#add grid T lat and lons ####and drop values outside the Labrador Sea 
 EKE.coords['nav_lat'] = (('y', 'x'), lats) 
 EKE.coords['nav_lon'] = (('y', 'x'), lons)
 #EKE = EKE.where(EKE.nav_lat > 50, drop=True)
@@ -79,14 +79,17 @@ EKE.coords['nav_lon'] = (('y', 'x'), lons)
 #EKE = EKE.where(EKE.LS_convec_mask == 1)#, drop=True) #drop data outside of mask
 #EKE = EKE.drop_vars('LS_convec_mask')
 
-#dropping below a certain depth
+#dropping below a specified depth 
 EKE = EKE.where(EKE.z < maxDepth, drop=True) #drop data outside of mask
 
-#summing in vertical dimension
-EKE = EKE.sum(dim='z')
+#getting time-averaged pelagic EKE 
+notnulls = EKE.isel(time_counter=3).isel(z=-1).notnull() #identifying shelves
+EKE = EKE.sum(dim='z') #summing in z direction
+EKE = EKE.mean(dim='time_counter') #taking average in time
+EKE = EKE.where(notnulls) #turning values on the shelves to NaNs
 
-#taking average in time
-EKE = EKE.mean(dim='time_counter')
+#dropping (more) unnecessary coordinates
+EKE = EKE.drop_vars(['time_counter','z'])
 
 #Saving
-EKE.to_netcdf('EKE_' + run + '_' + str(maxDepth) + '.nc')
+EKE.to_netcdf('EKE_avg_' + run + '_' + str(maxDepth) + '.nc')
