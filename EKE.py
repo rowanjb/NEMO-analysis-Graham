@@ -7,19 +7,38 @@ import xarray as xr
 import os
 
 #user specs
-run = 'EPM158' #specify the run
+run = 'EPM157' #specify the run
 window = 5 #specify the rolling window
 maxDepth = 450 #specify the integration depths 
 includeShelves = 'yes' #whether to calculate EKE on the shelves; yes==50g mem, no==60g mem
+mask_choice = 'LSCR' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
 
-#mask for land, bathymetry, etc. to reduce computational cost
-with xr.open_dataset('ANHA4_mesh_mask.nc') as DS:
+#creating directory if doesn't already exist
+dir = 'EKE_' + run + '/'
+if not os.path.exists(dir):
+    os.makedirs(dir)
+
+##################################################################################################################
+#MASKS
+
+#mask for land, bathymetry, etc. and horiz. grid dimensions
+with xr.open_dataset('masks/ANHA4_mesh_mask.nc') as DS:
     tmask = DS.tmask[0,:,:,:].to_numpy() #DataArray with dims (t: 1, z: 50, y: 800, x: 544) 
+    e1t = DS.e1t[0,:,:].rename({'y': 'y_grid_T','x': 'x_grid_T'}) #renames dims
+    e2t = DS.e2t[0,:,:].rename({'y': 'y_grid_T','x': 'x_grid_T'})
 
-#getting the grid T (I think, check this) lats and lons
-with xr.open_dataset('ANHA4_mesh_mask.nc') as DS:
-    lons = DS.variables['nav_lon']
-    lats = DS.variables['nav_lat']
+if mask_choice == 'LS2k': #mask for 2000m depth interior area
+    mask = xr.open_dataarray('masks/mask_LS_2k.nc').astype(int)
+elif mask_choice == 'LS': #mask for entire LS region
+    mask = xr.open_dataarray('masks/mask_LS.nc').astype(int)
+elif mask_choice == 'LSCR': #mask for LS convection region
+    mask = xr.open_dataset('masks/ARGOProfiles_mask.nc').tmask.astype(int).rename({'x':'x_grid_T','y':'y_grid_T'})
+else:
+    print("Y'all didn't choose a mask")
+    quit()
+
+##################################################################################################################
+#OPENING AND INITIAL PROCESSING OF THE NETCDF MODEL OUTPUT FILES
 
 #text files with lists of all non-empty model outputs
 gridU_txt = run + '_filepaths/' + run + '_gridU_filepaths.txt'
@@ -49,6 +68,14 @@ DSV = DSV.where(DSV.tmask == 1) #drop data outside of mask
 DSU.coords['tmask'] = (('z', 'y', 'x'), tmask) #add mask as coords
 DSU = DSU.where(DSU.tmask == 1) #drop data outside of mask
 
+#apply mask (if there is one)
+if mask_choice == 'LSCR' or mask_choice == 'LS2k' or mask_choice == 'LS':
+    DS.coords['mask'] = mask
+    DS = DS.where(DS.mask == 1, drop=True)
+
+##################################################################################################################
+#CALCULATIONS
+
 #co-locate the velocities onto the T grid 
 DSU = DSU.interp(x=DSU.x+0.5)
 DSV = DSV.interp(y=DSV.y-0.5)
@@ -57,12 +84,12 @@ DSV = DSV.interp(y=DSV.y-0.5)
 DSU = DSU.assign_coords(x=DSU.x-0.5)
 DSV = DSV.assign_coords(y=DSV.y+0.5)
 
-#EKE calculations (change back to 5 for actual calculations)
+#EKE calculations (ensure window=5 for actual calculations)
 DSU_bar_sqr = (DSU-DSU.rolling(time_counter=window,center=True).mean())**2 
 DSV_bar_sqr = (DSV-DSV.rolling(time_counter=window,center=True).mean())**2
 EKE = (DSU_bar_sqr.vozocrtx + DSV_bar_sqr.vomecrty)/2 #DataArray
 
-#dropping unnecessary coordinate
+#dropping unnecessary coordinate (saving memory?)
 EKE = EKE.drop_vars('time_centered')
 
 #add grid T lat and lons ####and drop values outside the Labrador Sea 
@@ -87,11 +114,10 @@ EKE = EKE.where(EKE.z < maxDepth, drop=True) #drop data outside of mask
 if includeShelves == 'yes':
     EKE = EKE.sum(dim='z') #summing in z direction
     EKE = EKE.mean(dim='time_counter') #taking average in time
-    EKE = EKE.drop_vars('time_counter') #drop time_counter coordinate
-    EKE.to_netcdf('EKE_avg_' + run + '_' + str(maxDepth) + '_incShelf.nc') #saving
+    EKE.to_netcdf('EKE/EKE_avg_' + run + '_' + str(maxDepth) + '_incShelf.nc') #saving
 elif includeShelves == 'no':
     notnulls = EKE.isel(time_counter=3).isel(z=-1).notnull() #identifying shelves
     EKE = EKE.sum(dim='z') #summing in z direction
     EKE = EKE.mean(dim='time_counter') #taking average in time
     EKE = EKE.where(notnulls) #turning values on the shelves to NaNs
-    EKE.to_netcdf('EKE_avg_' + run + '_' + str(maxDepth) + '_noShelf.nc') #saving
+    EKE.to_netcdf('EKE/EKE_avg_' + run + '_' + str(maxDepth) + '_noShelf.nc') #saving

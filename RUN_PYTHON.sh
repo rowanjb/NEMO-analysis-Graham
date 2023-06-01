@@ -5,7 +5,7 @@
 ##          Copied 27 Feb 2023 by rowan2@ualberta.ca                  ##
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
 #SBATCH -A rrg-pmyers-ad
-#SBATCH -J EKE_EPM158 
+#SBATCH -J heat_EPM151 
 #SBATCH --ntasks=1
 #SBATCH --mem=50000
 #SBATCH -t 0-10:00 
@@ -19,4 +19,4 @@ module load gdal/3.5.1
 module load python/3.10
 
 source /home/rowan/snakes2/bin/activate
-python /home/rowan/projects/rrg-pmyers-ad/rowan/NEMO-analysis-Graham/EKE.py
+python /home/rowan/projects/rrg-pmyers-ad/rowan/NEMO-analysis-Graham/heat.py
