@@ -2,6 +2,10 @@
 #Rowan Brown
 #May 5, 2023
 
+
+#I think you're mid-way into adding masking. Also realized that there's got to be a way to weight the cells by volume. 
+
+
 import numpy as np 
 import xarray as xr
 import os
@@ -9,9 +13,7 @@ import os
 #user specs
 run = 'EPM157' #specify the run
 window = 5 #specify the rolling window
-maxDepth = 450 #specify the integration depths 
-includeShelves = 'yes' #whether to calculate EKE on the shelves; yes==50g mem, no==60g mem
-mask_choice = 'LSCR' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
+mask_choice = 'LS' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
 
 #creating directory if doesn't already exist
 dir = 'EKE_' + run + '/'
@@ -74,7 +76,21 @@ if mask_choice == 'LSCR' or mask_choice == 'LS2k' or mask_choice == 'LS':
     DS = DS.where(DS.mask == 1, drop=True)
 
 ##################################################################################################################
+#want to output:
+# - EKE in the columns for all 4 depths across time for mapping purposes (all time???? or equal time windows) 
+# - total EKE in masked region for all 4 depths for plotting in time (all time???? or equal time windows) 
+##################################################################################################################
 #CALCULATIONS
+
+
+
+
+#EKE should be integrated with depth
+
+
+
+
+
 
 #co-locate the velocities onto the T grid 
 DSU = DSU.interp(x=DSU.x+0.5)
@@ -107,17 +123,33 @@ EKE.coords['nav_lon'] = (('y', 'x'), lons)
 #EKE = EKE.where(EKE.LS_convec_mask == 1)#, drop=True) #drop data outside of mask
 #EKE = EKE.drop_vars('LS_convec_mask')
 
-#dropping below a specified depth 
-EKE = EKE.where(EKE.z < maxDepth, drop=True) #drop data outside of mask
+#loop through the 4 depths and save .nc files
+for d in [50,200,1000,2000]: 
 
-#getting time-averaged pelagic EKE 
-if includeShelves == 'yes':
-    EKE = EKE.sum(dim='z') #summing in z direction
-    EKE = EKE.mean(dim='time_counter') #taking average in time
-    EKE.to_netcdf('EKE/EKE_avg_' + run + '_' + str(maxDepth) + '_incShelf.nc') #saving
-elif includeShelves == 'no':
-    notnulls = EKE.isel(time_counter=3).isel(z=-1).notnull() #identifying shelves
-    EKE = EKE.sum(dim='z') #summing in z direction
-    EKE = EKE.mean(dim='time_counter') #taking average in time
-    EKE = EKE.where(notnulls) #turning values on the shelves to NaNs
-    EKE.to_netcdf('EKE/EKE_avg_' + run + '_' + str(maxDepth) + '_noShelf.nc') #saving
+    #note: there are two main ideas below: "col" refers to the idea that we're looking at water-columnwise averages, ie so we can make maps later. On 
+    #the other hand, "region" refers to regionwise averages, so that we can make time plots later.
+
+    #masking shelves
+    #note: you need to mask the bathy or else the on-shelf values/averages/weights will be messed up. But really, you shouldn't include these
+    #areas at all because on-shelf averages will be more extreme than in deeper areas and it'll through your visuals off.
+    DS_d = DS.where(DS.deptht < d, drop=True) #drop values below specified depth
+    bottom_slice = DS_d.votemper.isel(deptht = -1).isel(time_counter = 0)
+    bottom_slice_bool = bottom_slice.notnull()
+    shelf_mask, temp = xr.broadcast(bottom_slice_bool, DS_d.votemper.isel(time_counter=0))
+    DS_d = DS_d.where(shelf_mask)
+
+
+    #dropping below a specified depth 
+    EKE = EKE.where(EKE.z < maxDepth, drop=True) #drop data outside of mask
+
+    #getting time-averaged pelagic EKE 
+    if includeShelves == 'yes':
+        EKE = EKE.sum(dim='z') #summing in z direction
+        EKE = EKE.mean(dim='time_counter') #taking average in time
+        EKE.to_netcdf('EKE/EKE_avg_' + run + '_' + str(maxDepth) + '_incShelf.nc') #saving
+    elif includeShelves == 'no':
+        notnulls = EKE.isel(time_counter=3).isel(z=-1).notnull() #identifying shelves
+        EKE = EKE.sum(dim='z') #summing in z direction
+        EKE = EKE.mean(dim='time_counter') #taking average in time
+        EKE = EKE.where(notnulls) #turning values on the shelves to NaNs
+        EKE.to_netcdf('EKE/EKE_avg_' + run + '_' + str(maxDepth) + '_noShelf.nc') #saving
