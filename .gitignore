@@ -15,6 +15,8 @@
 !heat_comparing.py
 !salt.py
 !volume.py
+!EKE_plot.py
+!EKE_map.py
 
 !convectiveResistance.py
 !density.py               
