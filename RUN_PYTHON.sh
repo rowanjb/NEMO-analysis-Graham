@@ -7,7 +7,7 @@
 #SBATCH -A rrg-pmyers-ad
 #SBATCH -J EKE_EPM151_LS
 #SBATCH --ntasks=1
-#SBATCH --mem=50000
+#SBATCH --mem=60000
 #SBATCH -t 0-10:00 
 #SBATCH -o slurm-mem-%j.out
 #SBATCH -e slurm-mem-%j.err

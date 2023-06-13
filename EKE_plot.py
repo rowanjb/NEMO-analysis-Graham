@@ -7,7 +7,7 @@ import xarray as xr
 import LSmap 
 import numpy as np 
 
-path = 'EPM157_EKE/EPM157_EKE_regionAvg_LS50.nc'
+path = 'EPM151_EKE/EPM151_EKE_regionAvg_LS50.nc'
 EKE = xr.open_dataarray(path)
 
 #minmax = LSmap.xrLSminmax(EKE,EKE.nav_lat_grid_T,EKE.nav_lon_grid_T)

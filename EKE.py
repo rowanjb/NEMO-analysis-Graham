@@ -2,6 +2,8 @@
 #Rowan Brown
 #May 5, 2023
 
+#figure out a way to not calc EKE too far out of masked area
+
 #outputs 8 netcdf files per run (and you get to choose one mask per run):
 # - 4 x depths (50m, 200m, 1000m, 2000m)
 # - 2 x output data types:
@@ -57,11 +59,11 @@ gridT_txt = run + '_filepaths/' + run + '_gridT_filepaths.txt'
 
 #open the text files and get lists of the .nc output filepaths
 with open(gridU_txt) as f: lines = f.readlines()
-filepaths_gridU = [line.strip() for line in lines]
+filepaths_gridU = [line.strip() for line in lines][:3]
 with open(gridV_txt) as f: lines = f.readlines()
-filepaths_gridV = [line.strip() for line in lines]
+filepaths_gridV = [line.strip() for line in lines][:3]
 with open(gridT_txt) as f: lines = f.readlines()
-filepaths_gridT = [line.strip() for line in lines]
+filepaths_gridT = [line.strip() for line in lines][:3]
 
 #preprocessing (specifying desired variables)
 preprocess_gridU = lambda ds: ds[['e3u','vozocrtx']]
@@ -81,6 +83,18 @@ DST = DST.rename({'deptht': 'z', 'y_grid_T': 'y', 'x_grid_T': 'x'})
 #add horizontal cell dimensions as variables to gridT dataset
 DST = DST.assign(e1t=e1t,e2t=e2t)
 
+#masking the general Lab Sea area to save computational expense
+northLat = 70
+westLon = -70
+southLat = 45
+eastLon = -35
+#DST = DST.where((DST.nav_lat_grid_T < northLat) & (DST.nav_lat_grid_T > southLat) & (DST.nav_lon_grid_T < eastLon) & (DST.nav_lon_grid_T > westLon),drop=True)
+
+DSU = DSU.assign_coords(nav_lat_grid_T=DST.nav_lat_grid_T)#e1t=DST.e1t, e2t=DST.e2t, e3t=DST.e3t)
+#DSU = DSU.reset_coords(names=['e1t','e2t','e3t'])
+print(DSU)
+quit()
+
 #TESTING LINES: are different files' coordinates equal, ie does depthu=depthv? 
 #print(DSU.z.to_numpy() - DSV.z.to_numpy())
 #print(DSU.z.to_numpy() - mask.z.to_numpy())
@@ -95,7 +109,6 @@ DST = DST.assign(e1t=e1t,e2t=e2t)
 # => EKE = (1/2) * density_0 * (u'**2 + v'**2) [J/m**3] where u′ = u − u_mean and v′ = v − v_mean
 #recall, units are J = kg m**2 / s**2, density = kg / m**3, and vel**2 = m**2 / s**2, so density*vel**2 = kg / m s**2 = J / m**3
 #so, integrating  over volume gives total Joules
-
 
 #first, velocities are co-located on the T grid: 
 DSU = DSU.interp(x=DSU.x+0.5)

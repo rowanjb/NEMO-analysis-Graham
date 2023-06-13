@@ -107,4 +107,12 @@ for d in [50, 200, 1000, 2000]: #loop through depths
     weights = weights.fillna(0)
     votemper_region_weighted = DS_d.votemper.weighted(weights)
     votemper_avg_region = votemper_region_weighted.mean(dim=['deptht','y_grid_T','x_grid_T'],skipna=True)
-    votemper_avg_region.to_netcdf(run + '_heat/' + run + '_votemper_spaceAvg_' + mask_choice + str(d) + '.nc') #.nc with region-avg temp through time (ie for making time plots)
+    votemper_avg_region.to_netcdf(run + '_heat/' + run + '_votemper_spaceAvg_' + mask_choice + str(d) + '.nc') 
+
+    #heat content
+    HC = rho_0 * C_p * 10**(-12) * (DS_d.votemper - refT) * volumes  
+    HC_sum_deptht = HC.sum(dim='deptht')
+    HC_avg_time = HC_sum_deptht.mean(dim='time_counter')
+    HC_avg_time.to_netcdf(run + '_heat/' + run + '_HC_timeAvg_' + mask_choice + str(d) + '.nc') 
+    HC_sum_space = HC_sum_deptht.sum(dim=['y_grid_T','x_grid_T'])
+    HC_sum_space.to_netcdf(run + '_heat/' + run + '_HC_spaceSum_' + mask_choice + str(d) + '.nc')
