@@ -17,10 +17,12 @@
 !volume.py
 !EKE_plot.py
 !EKE_map.py
-
+!maskMaker.py
+!maskMap.py
 !convectiveResistance.py
 !density.py               
 !LSmap.py                 
+!README.txt
 
 #...and also consider files in sub-directories
 !*/
