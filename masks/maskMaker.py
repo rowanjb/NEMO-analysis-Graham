@@ -48,3 +48,26 @@ maskLS = maskLS.rename('mask_LS') #rename from vosaline
 maskLS = maskLS.drop_vars(['time_centered','time_counter']) #remove coordinates
 maskLS.attrs = {'description': 'ANHA4 mask of Labrador Sea between 53N & 66N and 43W & 65W'} #add descriptive attribute 
 maskLS.to_netcdf('mask_LS.nc') #saving the mask
+
+###################################################################################################################################################
+#MASKING THE NORTH-WEST ATLANTIC (basically the same as the LS mask but a bit bigger)
+###################################################################################################################################################
+
+#only looking at the lab sea
+northLat = 70
+westLon = -70
+southLat = 50
+eastLon = -40
+vosaline = testFile.vosaline #getting vosaline again 
+vosaline = vosaline.where(vosaline > 0) #getting rid of values in land, where salinity=0
+vosaline = vosaline.where(vosaline.nav_lat_grid_T < northLat)
+vosaline = vosaline.where(vosaline.nav_lon_grid_T < eastLon)
+vosaline = vosaline.where(vosaline.nav_lat_grid_T > southLat)
+vosaline = vosaline.where(vosaline.nav_lon_grid_T > westLon)
+
+#getting mask of (the bigger) LS region, disregarding land
+maskLS = vosaline.notnull() #convert to bool, basically
+maskLS = maskLS.rename('mask_LS_bigger') #rename from vosaline
+maskLS = maskLS.drop_vars(['time_centered','time_counter']) #remove coordinates
+maskLS.attrs = {'description': 'ANHA4 mask of Labrador Sea between 50N & 70N and 40W & 70W'} #add descriptive attribute
+maskLS.to_netcdf('mask_LS_bigger.nc') #saving the mask
