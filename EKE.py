@@ -2,8 +2,6 @@
 #Rowan Brown
 #May 5, 2023
 
-#figure out a way to not calc EKE too far out of masked area
-
 #outputs 8 netcdf files per run (and you get to choose one mask per run):
 # - 4 x depths (50m, 200m, 1000m, 2000m)
 # - 2 x output data types:
@@ -18,9 +16,8 @@ import xarray as xr
 import os
 
 #user specs
-run = 'EPM151' #specify the run
+run = 'EPM157' #specify the run
 window = 5 #specify the rolling window (window = 5 ensures a 25 day window, because it's 5 x 5 files with 5 days per ANHA4 output file)
-#(Window might need to be odd, but I'm not sure)
 mask_choice = 'LS' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
 
 #creating directory if doesn't already exist
@@ -37,10 +34,13 @@ with xr.open_dataset('masks/ANHA4_mesh_mask.nc') as DS:
     e1t = DS.e1t[0,:,:] 
     e2t = DS.e2t[0,:,:]
 
+#this mask contains the larger LS area; it's used for initial masking (i.e., before EKE calculations) to save computational expense
+LSmask = xr.open_dataarray('masks/mask_LS_bigger.nc').astype(int).rename({'deptht':'z','x_grid_T':'x','y_grid_T':'y'})
+
 if mask_choice == 'LS2k': #mask for 2000m depth interior area
-    mask = xr.open_dataarray('masks/mask_LS_2k.nc').astype(int).rename({'deptht':'z','x_grid_T':'x','y_grid_T':'y','nav_lat_grid_T':'nav_lat','nav_lon_grid_T':'nav_lon'})
+    mask = xr.open_dataarray('masks/mask_LS_2k.nc').astype(int).rename({'deptht':'z','x_grid_T':'x','y_grid_T':'y'})
 elif mask_choice == 'LS': #mask for entire LS region
-    mask = xr.open_dataarray('masks/mask_LS.nc').astype(int).rename({'deptht':'z','x_grid_T':'x','y_grid_T':'y','nav_lat_grid_T':'nav_lat','nav_lon_grid_T':'nav_lon'})
+    mask = xr.open_dataarray('masks/mask_LS.nc').astype(int).rename({'deptht':'z','x_grid_T':'x','y_grid_T':'y'})
 elif mask_choice == 'LSCR': #mask for LS convection region
     mask = xr.open_dataset('masks/ARGOProfiles_mask.nc').tmask.astype(int)
 else:
@@ -50,22 +50,22 @@ else:
 ##################################################################################################################
 #OPENING AND INITIAL PROCESSING OF THE NETCDF MODEL OUTPUT FILES
 
-#text files with lists of all non-empty model outputs
+#these are text files with lists of all non-empty model outputs (made with 'filepaths.py')
 #U and V files are needed because U and V velocities determine EKE
-#T is needed to get the T-cell depths
+#T file is needed to get the T-cell depths (i.e., e3t)
 gridU_txt = run + '_filepaths/' + run + '_gridU_filepaths.txt'
 gridV_txt = run + '_filepaths/' + run + '_gridV_filepaths.txt'
 gridT_txt = run + '_filepaths/' + run + '_gridT_filepaths.txt'
 
 #open the text files and get lists of the .nc output filepaths
 with open(gridU_txt) as f: lines = f.readlines()
-filepaths_gridU = [line.strip() for line in lines][:3]
+filepaths_gridU = [line.strip() for line in lines]
 with open(gridV_txt) as f: lines = f.readlines()
-filepaths_gridV = [line.strip() for line in lines][:3]
+filepaths_gridV = [line.strip() for line in lines]
 with open(gridT_txt) as f: lines = f.readlines()
-filepaths_gridT = [line.strip() for line in lines][:3]
+filepaths_gridT = [line.strip() for line in lines]
 
-#preprocessing (specifying desired variables)
+#preprocessing (specifying variables that we need and ignoring the rest)
 preprocess_gridU = lambda ds: ds[['e3u','vozocrtx']]
 preprocess_gridV = lambda ds: ds[['e3v','vomecrty']]
 preprocess_gridT = lambda ds: ds[['e3t']]
@@ -75,7 +75,7 @@ DSU = xr.open_mfdataset(filepaths_gridU,preprocess=preprocess_gridU,engine="netc
 DSV = xr.open_mfdataset(filepaths_gridV,preprocess=preprocess_gridV,engine="netcdf4")
 DST = xr.open_mfdataset(filepaths_gridT,preprocess=preprocess_gridT,engine="netcdf4")
 
-#renaming dimensions so that they are the same for both velocity components
+#renaming dimensions so that they are the same for all datasets
 DSU = DSU.rename({'depthu': 'z'})
 DSV = DSV.rename({'depthv': 'z'})
 DST = DST.rename({'deptht': 'z', 'y_grid_T': 'y', 'x_grid_T': 'x'})
@@ -83,17 +83,13 @@ DST = DST.rename({'deptht': 'z', 'y_grid_T': 'y', 'x_grid_T': 'x'})
 #add horizontal cell dimensions as variables to gridT dataset
 DST = DST.assign(e1t=e1t,e2t=e2t)
 
-#masking the general Lab Sea area to save computational expense
-northLat = 70
-westLon = -70
-southLat = 45
-eastLon = -35
-#DST = DST.where((DST.nav_lat_grid_T < northLat) & (DST.nav_lat_grid_T > southLat) & (DST.nav_lon_grid_T < eastLon) & (DST.nav_lon_grid_T > westLon),drop=True)
-
-DSU = DSU.assign_coords(nav_lat_grid_T=DST.nav_lat_grid_T)#e1t=DST.e1t, e2t=DST.e2t, e3t=DST.e3t)
-#DSU = DSU.reset_coords(names=['e1t','e2t','e3t'])
-print(DSU)
-quit()
+#apply mask of the larger LS area (so we don't do needless EKE calculations in the rest of the ocean)
+DSU.coords['LSmask'] = LSmask 
+DSU = DSU.where(DSU.LSmask == 1)#, drop=True)
+DSV.coords['LSmask'] = LSmask 
+DSV = DSV.where(DSV.LSmask == 1)#, drop=True) 
+DST.coords['LSmask'] = LSmask 
+DST = DST.where(DST.LSmask == 1)#, drop=True) 
 
 #TESTING LINES: are different files' coordinates equal, ie does depthu=depthv? 
 #print(DSU.z.to_numpy() - DSV.z.to_numpy())
@@ -131,16 +127,16 @@ EKE = EKE.assign_coords(e1t=DST.e1t, e2t=DST.e2t, e3t=DST.e3t)
 EKE = EKE.reset_coords(names=['e1t','e2t','e3t'])
 
 #apply masks
-#NOTE: masks are applied AFTER the EKE calculations because otherwise (I think...) interpolation at the boundaries of the masked regions won't work
-EKE.coords['tmask'] = (('z', 'y', 'x'), tmask) #add mask of in-land cells as coords
-EKE = EKE.where(EKE.tmask == 1) #drop data outside of mask
+#NOTE: these masks are applied AFTER the EKE calculations because otherwise (I think...) interpolation at the boundaries of the masked regions won't work
+##EKE.coords['tmask'] = (('z', 'y', 'x'), tmask) #add mask of in-land cells as coords
+##EKE = EKE.where(EKE.tmask == 1) #drop data outside of mask
 if mask_choice == 'LSCR' or mask_choice == 'LS2k' or mask_choice == 'LS': #same as above but with data outside the region of interest
     EKE.coords['mask'] = mask
     EKE = EKE.where(EKE.mask == 1, drop=True)
 
 #dropping unnecessary coordinates (potentially saving memory?)
 EKE = EKE.drop_vars('time_centered')
-EKE = EKE.drop_vars({'nav_lat','nav_lon'})
+#EKE = EKE.drop_vars({'nav_lat','nav_lon'})
 #NOTE: nav_lat_grid_T d.n.e. nav_lat, and since things are co-located on the T gird, nav_lat and nav_lon are removed in favour of their grid_T counterparts
 
 #loop through the 4 depths and save .nc files
