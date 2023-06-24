@@ -15,8 +15,8 @@ import xarray as xr
 import os
 
 #user specs
-run = 'EPM151' #specify the run
-mask_choice = 'LS' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
+run = 'EPM156' #specify the run
+mask_choice = 'LS2k' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
 
 #creating directory if doesn't already exist
 dir = run + '_heat/'
@@ -50,7 +50,7 @@ gridT_txt = run + '_filepaths/' + run + '_gridT_filepaths.txt'
 
 #open the text files and get lists of the .nc output filepaths
 with open(gridT_txt) as f: lines = f.readlines()
-filepaths_gridT = [line.strip() for line in lines][:3]
+filepaths_gridT = [line.strip() for line in lines]
 
 #open the files and look at e3t and votemper
 preprocess_gridT = lambda ds: ds[['e3t','votemper']]

@@ -16,9 +16,11 @@ import xarray as xr
 import os
 
 #user specs
-run = 'EPM157' #specify the run
+run = 'EPM152' #specify the run
 window = 5 #specify the rolling window (window = 5 ensures a 25 day window, because it's 5 x 5 files with 5 days per ANHA4 output file)
 mask_choice = 'LS' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
+
+d = 50 #depth (50m 200m 1000m 2000m)
 
 #creating directory if doesn't already exist
 dir = run + '_EKE/'
@@ -84,6 +86,7 @@ DST = DST.rename({'deptht': 'z', 'y_grid_T': 'y', 'x_grid_T': 'x'})
 DST = DST.assign(e1t=e1t,e2t=e2t)
 
 #apply mask of the larger LS area (so we don't do needless EKE calculations in the rest of the ocean)
+#SAVES CPU EXPENSE
 DSU.coords['LSmask'] = LSmask 
 DSU = DSU.where(DSU.LSmask == 1)#, drop=True)
 DSV.coords['LSmask'] = LSmask 
@@ -99,7 +102,7 @@ DST = DST.where(DST.LSmask == 1)#, drop=True)
 #print(np.sum(DST.nav_lat[300:340].to_numpy() - DSU.nav_lat[300:340].to_numpy()))
 
 ##################################################################################################################
-#CALCULATIONS
+#EKE CALCULATIONS
 
 #EKE is calculated based on the methods from: Martínez-Moreno et al. - Global changes in oceanic mesoscale currents over the satellite altimetry record
 # => EKE = (1/2) * density_0 * (u'**2 + v'**2) [J/m**3] where u′ = u − u_mean and v′ = v − v_mean
@@ -134,40 +137,66 @@ if mask_choice == 'LSCR' or mask_choice == 'LS2k' or mask_choice == 'LS': #same 
     EKE.coords['mask'] = mask
     EKE = EKE.where(EKE.mask == 1, drop=True)
 
+
+
+#this doesn't drop over the shelves when using LS mask
+
+
+
+
+
+
+
+
+
+
+
+
 #dropping unnecessary coordinates (potentially saving memory?)
 EKE = EKE.drop_vars('time_centered')
 #EKE = EKE.drop_vars({'nav_lat','nav_lon'})
 #NOTE: nav_lat_grid_T d.n.e. nav_lat, and since things are co-located on the T gird, nav_lat and nav_lon are removed in favour of their grid_T counterparts
 
-#loop through the 4 depths and save .nc files
-for d in [50,200,1000,2000]: 
-    EKEd = EKE.where(EKE.z < d, drop=True) #creating new dataset truncated at depth d
+##################################################################################################################
+#REGION MASKING AND SAVING
 
-    #note: there are two main ideas below: "col" refers to the idea that we're looking at column-wise averages, ie so we can make maps later. On 
-    #the other hand, "region" refers to region-wise averages, so that we can make time plots later.
+#note: there are two main ideas below: "col" refers to the idea that we're looking at column-wise averages, ie so we can make maps later. On 
+#the other hand, "region" refers to region-wise averages, so that we can make time plots later.
 
-    #masking shelves
-    #NOTE: bathy is masked to avoid skewed understandings/results from the on-shelf values   
-    #this section could be commented out if needed 
-    bottom_slice = EKEd.isel(z = -1).isel(time_counter = int(np.floor(window/2))) #slice of dataset at the bottom depth (ie 50m or 200m)
-    bottom_slice_bool = bottom_slice.notnull() #making values not in mask equal nan (in-land/shelf values were made nan earlier)
-    shelf_mask, temp = xr.broadcast(bottom_slice_bool, EKEd.isel(time_counter=0)) #expanding the mask to the same shape as EKEd (note temp is for temporary)
-    EKEd = EKE.where(shelf_mask) #masking EKE (and I guess e1t, e2t, and e3t)
+EKEd = EKE.where(EKE.z < d, drop=True) #creating new dataset truncated at depth d
+
+#THIS IS REDUNDANT BECAUSE THE LS, LSCR, AND LS2k MASKS ALREADY COVER THE SHELVES (I THINK...)
+##########################LS DOENS"T
+#masking shelves
+#NOTE: bathy is masked to avoid skewed understandings/results from the on-shelf values   
+#this section could be commented out if needed 
+#bottom_slice = EKEd.isel(z = -1).isel(time_counter = int(np.floor(window/2))) #slice of dataset at the bottom depth (ie 50m or 200m)
+#bottom_slice_bool = bottom_slice.notnull() #making values not in mask equal nan (in-land/shelf values were made nan earlier)
+#shelf_mask, temp = xr.broadcast(bottom_slice_bool, EKEd.isel(time_counter=0)) #expanding the mask to the same shape as EKEd (note temp is for temporary)
+#EKEd = EKE.where(shelf_mask) #masking EKE (and I guess e1t, e2t, and e3t)
+   
+#cell volumes
+volumes = EKEd.e1t*EKEd.e3t*EKEd.e3t
     
-    #cell volumes
-    volumes = EKEd.e1t*EKEd.e3t*EKEd.e3t
-    
-    #total Joules in each cell
-    EKEd['EKE_per_cell_in_J'] = EKEd.EKE*volumes
+#total Joules in each cell
+EKEd['EKE_per_cell_in_J'] = EKEd.EKE*volumes
 
-    #total Joules in each column
-    #NOTE for below: if you're not blocking out shelf values, skipna should be true
-    EKEd['EKE_per_column_in_J'] = EKEd.EKE_per_cell_in_J.sum('z',skipna=False) #nans can only by in columns on the shelves, where they're masked, so it's ok and convenient for skipna=False
-    EKEd['EKE_per_column_in_J_avg_in_time'] = EKEd.EKE_per_column_in_J.mean('time_counter',skipna=True) #don't include nans in the calculations since they're on days we don't want to include
+#total Joules in each column
+#NOTE for below: if you're not blocking out shelf values, skipna should be true
+EKEd['EKE_per_column_in_J'] = EKEd.EKE_per_cell_in_J.sum('z',skipna=False) #nans can only by in columns on the shelves, where they're masked, so it's ok and convenient for skipna=False
+EKEd['EKE_per_column_in_J_avg_in_time'] = EKEd.EKE_per_column_in_J.mean('time_counter',skipna=True) #don't include nans in the calculations since they're on days we don't want to include
 
-    #total Joules in the masked region
-    EKEd['EKE_in_region_in_J'] = EKEd.EKE_per_cell_in_J.sum(['z','x','y'],skipna=True)
+#total Joules in the masked region
+EKEd['EKE_in_region_in_J'] = EKEd.EKE_per_cell_in_J.sum(['z','x','y'],skipna=True)
 
-    #saving
-    EKEd.EKE_per_column_in_J_avg_in_time.to_netcdf(run + '_EKE/' + run + '_EKE_timeAvg_' + mask_choice + str(d) + '.nc')
-    EKEd.EKE_in_region_in_J.to_netcdf(run + '_EKE/' + run + '_EKE_regionAvg_' + mask_choice + str(d) + '.nc')
+
+EKE.indexes['time_counter'].to_datetimeindex()
+
+
+#testDA = EKEd.EKE_in_region_in_J
+#print(testDA.time_counter)
+#quit()
+
+#saving
+EKEd.EKE_per_column_in_J_avg_in_time.to_netcdf(run + '_EKE/' + run + '_EKE_timeAvg_' + mask_choice + str(d) + '.nc')
+EKEd.EKE_in_region_in_J.to_netcdf(run + '_EKE/' + run + '_EKE_regionAvg_' + mask_choice + str(d) + '.nc')

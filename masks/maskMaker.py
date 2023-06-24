@@ -43,7 +43,7 @@ mask.to_netcdf('mask_LS_2k.nc') #saving the mask
 ###################################################################################################################################################
 
 #getting mask of LS region, disregarding land and outside of bounds in the above section
-maskLS = vosaline.notnull() #convert to bool, basically
+maskLS = vosaline.notnull() #convert to bool, basically (note that shelves are masked)
 maskLS = maskLS.rename('mask_LS') #rename from vosaline
 maskLS = maskLS.drop_vars(['time_centered','time_counter']) #remove coordinates
 maskLS.attrs = {'description': 'ANHA4 mask of Labrador Sea between 53N & 66N and 43W & 65W'} #add descriptive attribute 
