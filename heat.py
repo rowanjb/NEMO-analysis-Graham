@@ -15,8 +15,8 @@ import xarray as xr
 import os
 
 #user specs
-run = 'EPM156' #specify the run
-mask_choice = 'LS2k' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
+run = 'EPM158' #specify the run
+mask_choice = 'LSCR' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
 
 #creating directory if doesn't already exist
 dir = run + '_heat/'

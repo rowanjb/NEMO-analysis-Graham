@@ -5,10 +5,10 @@
 ##          Copied 27 Feb 2023 by rowan2@ualberta.ca                  ##
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
 #SBATCH -A rrg-pmyers-ad
-#SBATCH -J heat_EPM156_LS2k
+#SBATCH -J salt_EPM158_LSCR
 #SBATCH --ntasks=1
 #SBATCH --mem=10000
-#SBATCH -t 0-10:00 
+#SBATCH -t 0-20:00 
 #SBATCH -o slurm-mem-%j.out
 #SBATCH -e slurm-mem-%j.err
 #SBATCH --mail-type=ALL
@@ -19,4 +19,4 @@ module load gdal/3.5.1
 module load python/3.10
 
 source /home/rowan/snakes2/bin/activate
-python /home/rowan/projects/rrg-pmyers-ad/rowan/NEMO-analysis-Graham/heat.py
+python /home/rowan/projects/rrg-pmyers-ad/rowan/NEMO-analysis-Graham/salt.py

@@ -15,8 +15,8 @@ import numpy as np
 
 westLon = -70
 eastLon = -35
-northLat = 75
-southLat = 45
+northLat = 70
+southLat = 50
 
 def xrLSminmax(xrData,lats,lons):
         """ Finds min and max values in xarray dataarrays (and datasets??) in the Labrador Sea.
@@ -91,6 +91,7 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName,scale='normal'):
         gl.top_labels=False #suppress top labels
         gl.right_labels=False #suppress right labels
         gl.rotate_labels=False
+        gl.ylocator = mticker.FixedLocator([50, 55, 60, 65, 70, 75, 80])
         gl.xlocator = mticker.FixedLocator([-10, -20, -30, -40, -50, -60, -70, -80, -90])
         gl.xlabel_style = {'size': 9}
         gl.ylabel_style = {'size': 9}
@@ -105,8 +106,9 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName,scale='normal'):
         #plotting data
         if scale == 'normal':
             p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), vmin=min, vmax=max, cmap='gist_ncar')
-            ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
-            cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
+            ax_cb = plt.axes([0.88, 0.25, 0.022, 0.5])
+            cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')#, format='%.0e')
+            cb.formatter.set_powerlimits((0, 0)) 
             cb.ax.set_ylabel(CBlabel)
         elif scale == 'log':
             if (min>0 and max>0) or (min<0 and max<0): #minmax range doesn't contain zero
@@ -150,17 +152,9 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName,scale='normal'):
         else:
             print("Scale need to be 'log' or 'normal'")
 
-        #colourbar 
-        #ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
-        #cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
-        #if scale == 'log':
-        #    formatter = mticker.LogFormatter(10, labelOnlyBase=False) 
-        #    cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical', ticks=[min,max], format=formatter)
-        #cb.ax.set_ylabel(CBlabel)
-
         #title
         ax.set_title(title)# + ' ' + date)#,fontdict={'fontsize': 12})
 
         #save and close figure
         plt.savefig(fileName + '.png',dpi=300, bbox_inches="tight")
-        plt.clf
+        plt.clf()
