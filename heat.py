@@ -1,10 +1,11 @@
-#Produces heat content 
+#Produces heat content and temperature 
 #Rowan Brown
 #17 May 2023
 
-#outputs 16 netcdf files per run (and you get to choose one mask per run):
+#outputs netcdf files
 # - 4 x depths (50m, 200m, 1000m, 2000m)
 # - 2 x parameters (heat content and average temperatures)
+# - 3 x masks
 # - 2 x output data "formats":
 #   - HC/temperature in each column averaged across time, for mapping purposes (should this be updated so that the window can be spec'ed?) 
 #   - total HC/average temperature in the masked region, for plotting in time
