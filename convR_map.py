@@ -41,7 +41,7 @@ for depth in ['50','200','1000','2000']:
     #if variable=='votemper': title = 'Difference in average temperature in the top ' + depth + 'm of \nthe Labrador Sea' + mask_description + ', ' + run1 + '-' + run2
     #if variable=='HC': title = 'Difference in heat content in the top ' + depth + 'm of \nthe Labrador Sea' + mask_description + ', ' + run1 + '-' + run2
 
-    fileName  = 'pics_convR/test'+depth+'.nc'# + run1 + '-' + run2 + '_' + variable + '_map_' + mask + depth
+    fileName  = 'pics_convR/test'+depth# + run1 + '-' + run2 + '_' + variable + '_map_' + mask + depth
     LSmap.LSmap(da,da.nav_lon_grid_T,da.nav_lat_grid_T,minmax,CBlabel,title,fileName)#,scale='log')
 
 

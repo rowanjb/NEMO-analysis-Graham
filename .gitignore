@@ -24,6 +24,7 @@
 !README.txt 
 !salt.py  
 !RUN_MATLAB.sh  
+!currentVel.py
 
 # Files in masks
 !ANHA4_mesh_mask.nc 
