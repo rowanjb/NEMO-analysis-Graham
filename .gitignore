@@ -3,26 +3,36 @@
 
 # But not these files...
 !.gitignore
-!ANHA4_mesh_mask.nc
-!ARGOProfiles_mask.nc
-!EKE.py
-!EKE_timeseries.py
-!MLD_timeseries.py
-!RUN_MATLAB.sh
+!convR_map.py   
+!EKE_map.py    
+!heat_map.py   
+!MLD_map.py   
 !RUN_PYTHON.sh
-!filepaths.py
-!heat.py
-!heat_comparing.py
-!salt.py
-!volume.py
-!EKE_plot.py
-!EKE_map.py
-!maskMaker.py
-!maskMap.py
-!convectiveResistance.py
-!density.py               
-!LSmap.py                 
-!README.txt
+!convR_plot.py  
+!EKE_plot.py  
+!heat_plot.py  
+!MLD_plot.py  
+!salt_map.py 
+!convR.py 
+!EKE.py 
+!heat.py 
+!MLD.py 
+!salt_plot.py
+!density.py  
+!filepaths.py 
+!LSmap.py 
+!README.txt 
+!salt.py  
+!RUN_MATLAB.sh  
+
+# Files in masks
+!ANHA4_mesh_mask.nc 
+!ARGOProfiles_mask.nc 
+!mask_LS_2k.nc 
+!mask_LS_bigger.nc 
+!maskLSmap.py mask_LS.nc 
+!maskMaker.py 
+!maskMap.py_
 
 #...and also consider files in sub-directories
 !*/
