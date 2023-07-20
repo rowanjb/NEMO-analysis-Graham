@@ -9,7 +9,7 @@ import numpy as np
 
 variable = 'avg_MLD' #max_MLD or avg_MLD
 mask = 'LS2k' #LS2k or LS or LSCR
-time_slice = True #whether you want a shorter slice of time
+time_slice = False #whether you want a shorter slice of time
 
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y'))#'%m/%d/%Y'))
 interval = 2

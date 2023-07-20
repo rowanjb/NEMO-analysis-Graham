@@ -14,7 +14,7 @@ import xarray as xr
 import os
 
 #user specs
-run = 'EPM158' #specify the run
+run = 'EPM151' #specify the run
 mask_choice = 'LS' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
 
 #creating directory if doesn't already exist
@@ -51,11 +51,11 @@ gridT_txt = run + '_filepaths/' + run + '_gridT_filepaths.txt'
 
 #open the text files and get lists of the .nc output filepaths
 with open(gridU_txt) as f: lines = f.readlines()
-filepaths_gridU = [line.strip() for line in lines][:3]
+filepaths_gridU = [line.strip() for line in lines]
 with open(gridV_txt) as f: lines = f.readlines()
-filepaths_gridV = [line.strip() for line in lines][:3]
+filepaths_gridV = [line.strip() for line in lines]
 with open(gridT_txt) as f: lines = f.readlines()
-filepaths_gridT = [line.strip() for line in lines][:3]
+filepaths_gridT = [line.strip() for line in lines]
 
 #preprocessing (specifying variables that we need and ignoring the rest)
 preprocess_gridU = lambda ds: ds[['e3u','vozocrtx']]
@@ -139,7 +139,7 @@ for d in [50, 200, 1000, 2000]: #loop through depths
     #print(DS_d.U[0,:,30,30].to_numpy())
     DS_d['U'] = DS_d.U.mean(dim=['z','time_counter'])
     DS_d['V'] = DS_d.V.mean(dim=['z','time_counter'])
-    DS_d = DS_d.drop_vars(['vosaline','z'])
+    DS_d = DS_d.drop_vars(['vosaline','z','time_counter'])
     
     DS_d.to_netcdf(run + '_currentVel/' + run + '_avgCurrentVel_map_' + mask_choice + str(d) + '.nc')
     #print(DS_d.U[0,30,30].to_numpy())

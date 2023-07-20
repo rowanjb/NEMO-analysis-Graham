@@ -17,15 +17,15 @@ for depth in ['50','200','1000','2000']:
     path1 = run1 + '_salt/' + run1 + '_' + variable + '_timeAvg_' + mask + depth + '.nc'
     da1 = xr.open_dataarray(path1)
 
-    path2 = run2 + '_salt/' + run2 + '_' + variable + '_timeAvg_' + mask + depth + '.nc'
-    da2 = xr.open_dataarray(path2)
+    #path2 = run2 + '_salt/' + run2 + '_' + variable + '_timeAvg_' + mask + depth + '.nc'
+    #da2 = xr.open_dataarray(path2)
 
     #dealing within masked areas where FWC=0
     if variable=='FWC':
         da1 = da1.where(da1 != 0)
         da2 = da2.where(da2 != 0)
 
-    da = da1-da2    
+    da = da1#-da2    
     minmax = LSmap.xrLSminmax(da,da.nav_lat_grid_T,da.nav_lon_grid_T)
     #mn = math.floor(minmax[0]*4)/4
     #mx = math.ceil(minmax[1]*4)/4
@@ -41,7 +41,7 @@ for depth in ['50','200','1000','2000']:
     if variable=='vosaline': title = 'Difference in average salinity in the top ' + depth + 'm of \nthe Labrador Sea' + mask_description + ', ' + run1 + '-' + run2
     if variable=='FWC': title = 'Difference in freshwater content in the top ' + depth + 'm of \nthe Labrador Sea' + mask_description + ', ' + run1 + '-' + run2
 
-    fileName  = 'pics_salt/' + run1 + '-' + run2 + '_' + variable + '_map_' + mask + depth
+    fileName  = 'test_salt' #'pics_salt/' + run1 + '-' + run2 + '_' + variable + '_map_' + mask + depth
     LSmap.LSmap(da,da.nav_lon_grid_T,da.nav_lat_grid_T,minmax,CBlabel,title,fileName)#,scale='log')
 
 

@@ -5,31 +5,31 @@ import LSmap
 import numpy as np 
 import math
 
-mask = 'LSCR' #LS or LSCR or LS2k, though if you plot LS it captures LSCR and LS2k anyway...
-run1 = 'EPM158'
-#run2 = 'EPM155'
+mask = 'LS' #LS or LSCR or LS2k, though if you plot LS it captures LSCR and LS2k anyway...
+run1 = 'EPM156'
+run2 = 'EPM158'
 
 for depth in ['50','200','1000','2000']:
 
     path1 = run1 + '_convR/' + run1 + '_convR_map_' + mask + depth + '.nc'
     da1 = xr.open_dataarray(path1)
 
-    #path2 = run2 + '_convR/' + run2 + '_convR_map_' + mask + depth + '.nc'
-    #da2 = xr.open_dataarray(path2)
+    path2 = run2 + '_convR/' + run2 + '_convR_map_' + mask + depth + '.nc'
+    da2 = xr.open_dataarray(path2)
 
     ##dealing within masked areas where HC=0
     #if variable=='HC':
     #    da1 = da1.where(da1 > 0)
     #    da2 = da2.where(da2 > 0)
 
-    da = da1#-da2
+    da = da1-da2
     
     minmax = LSmap.xrLSminmax(da,da.nav_lat_grid_T,da.nav_lon_grid_T)
     mn = math.floor(minmax[0])
     mx = math.ceil(minmax[1])
     minmax = mn,mx
 
-    CBlabel = 'Convective resistance ($J m^{-3}$)'
+    CBlabel = 'Convective resistance ($J$ $m^{-3}$)'
     #if variable=='votemper': CBlabel = '$\Delta$T ($\degree C$)'
     #if variable=='HC': CBlabel = '$\Delta$HC ($J$)'
 
@@ -37,13 +37,12 @@ for depth in ['50','200','1000','2000']:
     elif mask == 'LS': mask_description = ''
     elif mask == 'LSCR': mask_description = ' convection region'
     
-    title = 'Test fig.' #Difference in average temperature in the top ' + depth + 'm of \nthe Labrador Sea' + mask_description + ', ' + run1 + '-' + run2
+    title = 'Difference in convective resistance in the top ' + depth + 'm of \nthe Labrador Sea' + mask_description + ', ' + run1 + '-' + run2
     #if variable=='votemper': title = 'Difference in average temperature in the top ' + depth + 'm of \nthe Labrador Sea' + mask_description + ', ' + run1 + '-' + run2
     #if variable=='HC': title = 'Difference in heat content in the top ' + depth + 'm of \nthe Labrador Sea' + mask_description + ', ' + run1 + '-' + run2
 
-    fileName  = 'pics_convR/test'+depth# + run1 + '-' + run2 + '_' + variable + '_map_' + mask + depth
+    fileName  = 'pics_convR/' + run1 + '-' + run2 + '_convR_map_' + mask + depth
     LSmap.LSmap(da,da.nav_lon_grid_T,da.nav_lat_grid_T,minmax,CBlabel,title,fileName)#,scale='log')
-
 
 quit()
 

@@ -103,23 +103,26 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName,scale='normal'):
         #lons = xrData.nav_lon
         #lats = xrData.nav_lat
 
+        #colour map
+        cm = 'viridis'
+
         #plotting data
         if scale == 'normal':
-            p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), vmin=min, vmax=max, cmap='gist_ncar')
+            p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), vmin=min, vmax=max, cmap=cm)
             ax_cb = plt.axes([0.88, 0.25, 0.022, 0.5])
             cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')#, format='%.0e')
             cb.formatter.set_powerlimits((0, 0)) 
             cb.ax.set_ylabel(CBlabel)
         elif scale == 'log':
             if (min>0 and max>0) or (min<0 and max<0): #minmax range doesn't contain zero
-                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), norm=colors.LogNorm(vmin=min, vmax=max, clip=True), cmap='gist_ncar')
+                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), norm=colors.LogNorm(vmin=min, vmax=max, clip=True), cmap=cm)
                 ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
                 cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
                 cb.ax.set_ylabel(CBlabel)
             elif (min<0 and max>0): #minmax range contains zero
                 print("Don't forget: the log scale is linearized around zero; you can play with parameters to adjust the colour bar")
                 lt = 10
-                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap='gist_ncar', norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
+                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap=cm, norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
                 ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
                 #formatter = mticker.LogFormatter(base=10, labelOnlyBase=False, minor_thresholds=(50,40), linthresh=lt)
                 cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical')
@@ -130,7 +133,7 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName,scale='normal'):
             elif min==0 and max>0:
                 print("Don't forget: the log scale is linearized just above zero; you can play with parameters to adjust the colour bar")
                 lt = 10
-                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap='gist_ncar', norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
+                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap=cm, norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
                 p1.set_clim(0,max)
                 ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
                 formatter = mticker.LogFormatter(base=10, labelOnlyBase=False, minor_thresholds=(50,40), linthresh=lt)
@@ -140,7 +143,7 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName,scale='normal'):
             elif max==0 and min<0:
                 print("Don't forget: the log scale is linearized just below zero; you can play with parameters to adjust the colour bar")
                 lt = 10
-                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap='gist_ncar', norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
+                p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap=cm, norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
                 p1.set_clim(0,max)
                 ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
                 formatter = mticker.LogFormatter(base=10, labelOnlyBase=False, minor_thresholds=(50,40), linthresh=lt)

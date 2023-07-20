@@ -15,8 +15,8 @@ import numpy as np
 import density
 
 #user specs
-run = 'EPM156' #specify the run
-mask_choice = 'LS2k' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
+run = 'EPM158' #specify the run
+mask_choice = 'LSCR' #choose which mask; options are 'LSCR', 'LS2k', or 'LS'
 
 #creating directory if doesn't already exist
 dir = run + '_convR/'
@@ -69,7 +69,7 @@ if mask_choice == 'LSCR' or mask_choice == 'LS2k' or mask_choice == 'LS':
 
 ##################################################################################################################
 #CALCULATIONS
-#Note: calculations are based on the Introducing Lab 60 from Clark
+#Note: calculations are based on the Introducing Lab 60 paper from Clark
 
 g = 9.80665 #gravity
 
@@ -102,8 +102,8 @@ for d in [50, 200, 1000, 2000]: #loop through depths
     term2 = term2.sum(dim='deptht')
     integrand = term1 - term2
     convR_col = integrand*g #this is the representative value in each column, units are J/m3 or kg/m s2 (didn't both multiplying and dividing by area)
-    convR_timePlot = convR_col*areas/area #multiplying by cell area and dividing by total area (i.e., essentially weighting the values)
-    convR_timePlot = convR_timePlot.sum(dim=['x_grid_T','y_grid_T']) #summing the weighted values spatially, which gives the mean convR in the mask
+    convR_timePlot = convR_col*areas*DS_d.deptht.isel(deptht=-1) #multiply the J/m3 value by column area and depth to get the total J  #/area #multiplying by cell area and dividing by total area (i.e., essentially weighting the values)
+    convR_timePlot = convR_timePlot.sum(dim=['x_grid_T','y_grid_T']) #summing to get the total J in in the masked area #summing the weighted values spatially, which gives the mean convR in the mask
     convR_col = convR_col.mean(dim='time_counter') #taking the mean in time, which gives the mean convR in each column throughout the run
     
     #dropping deptht dim
@@ -111,8 +111,8 @@ for d in [50, 200, 1000, 2000]: #loop through depths
     convR_col = convR_col.drop_vars('deptht')
 
     #saving
-    convR_col.to_netcdf(run + '_convR/' + run + '_convR_map_' + mask_choice + str(d) + '.nc')
-    convR_timePlot.to_netcdf(run + '_convR/' + run + '_convR_plot_' + mask_choice + str(d) + '.nc') 
+    #convR_col.to_netcdf(run + '_convR/' + run + '_convR_map_' + mask_choice + str(d) + '.nc')
+    convR_timePlot.to_netcdf(run + '_convR/' + run + '_sumConvR_plot_' + mask_choice + str(d) + '.nc') 
 
 
 

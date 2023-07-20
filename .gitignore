@@ -25,6 +25,8 @@
 !salt.py  
 !RUN_MATLAB.sh  
 !currentVel.py
+!currentVel_map.py
+!transports.py
 
 # Files in masks
 !ANHA4_mesh_mask.nc 

@@ -8,7 +8,7 @@ import LSmap
 import numpy as np 
 
 mask = 'LSCR' #LS2k or LS or LSCR
-depth = '2000' #50 or 200 or 1000 or 2000
+#depth = '2000' #50 or 200 or 1000 or 2000
 time_slice = False #whether you want a shorter slice of time
 
 for depth in ['50','200','1000','2000']:
@@ -18,7 +18,9 @@ for depth in ['50','200','1000','2000']:
     if time_slice: interval = 1
     plt.gca().xaxis.set_major_locator(mdates.YearLocator(interval))#(interval=365)) #with YearLocator(1) the ticks are at the start of the year
 
-    for run in ['EPM158']:#['EPM151','EPM152','EPM155','EPM156','EPM157','EPM158']:
+    plt.style.use('tableau-colorblind10')
+
+    for run in ['EPM151','EPM152','EPM155','EPM156','EPM157','EPM158']:
         path = run + '_convR/' + run + '_convR_plot_' + mask + depth + '.nc' #EPM158_convR_plot_LSCR1000.nc
         data2plot = xr.open_dataarray(path)
         if time_slice: data2plot = data2plot.sel(time_counter=slice('2010-01-01', '2014-01-01'))
@@ -31,12 +33,12 @@ for depth in ['50','200','1000','2000']:
     if mask == 'LS2k': mask_description = 'interior'
     elif mask == 'LS': mask_description = ''
     elif mask == 'LSCR': mask_description = 'convection region'
-    titl = 'Convective resistance in the top ' + depth + 'm of \nthe Labrador Sea ' + mask_description
+    titl = 'Mean convective resistance in the top ' + depth + 'm of \nthe Labrador Sea ' + mask_description
     plt.title(titl)
-    plt.ylabel('Convective resistance ($J/m^3$)') 
+    plt.ylabel('Convective resistance ($J$ $m^3$)') 
     plt.xlabel('Time')
-    name = 'pics_convR/convR_plot_' + mask + depth + '_over_time.png'
-    if time_slice: name = 'pics_convR/convR_plot_' + mask + depth + '_over_time_2010-2014.png' 
+    name = 'pics_convR/meanConvR_plot_' + mask + depth + '_over_time.png'
+    if time_slice: name = 'pics_convR/meanConvR_plot_' + mask + depth + '_over_time_2010-2014.png' 
     plt.savefig(name, dpi=900, bbox_inches="tight")
     plt.clf()
 
