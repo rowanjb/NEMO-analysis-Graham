@@ -16,33 +16,77 @@ import csv
 
 #gets the list of grid points for a straight section between two points
 #uses the bresenham line algorithm
-def section_calculation(x1, x2, y1, y2):
+def section_calculation(x0, y0, x1, y1):
 
-    ii = []
-    jj = []
+    def plotLineLow(x0, y0, x1, y1):
+        
+        ii = []
+        jj = []
 
-    dx = x2-x1
-    dy = y2-y1
-    yi = 1
+        dx = x1 - x0
+        dy = y1 - y0
+        yi = 1
+    
+        if dy < 0:
+            yi = -1
+            dy = -dy
+    
+        D = (2 * dy) - dx
+        y = y0
 
-    if dy < 0:
-        yi = -1
-        dy = -dy
-
-    D = (2*dy) - dx
-    y = y1
-
-    for x in range(x1,x2):
-        ii.append(x)
-        jj.append(y)
-        if D > 0:
-            y = y +yi
-            D = D + (2*(dy-dx))
+        for x in range(x0, x1):
             ii.append(x)
             jj.append(y)
-        else:
-            D = D + 2*dy
+            if D > 0:
+                y = y + yi
+                D = D + (2 * (dy - dx))
+                ii.append(x)
+                jj.append(y)
+            else:
+                D = D + 2*dy
 
+        return ii, jj
+
+    def plotLineHigh(x0, y0, x1, y1):
+        
+        ii = []
+        jj = []
+
+        dx = x1 - x0
+        dy = y1 - y0
+        xi = 1
+    
+        if dx < 0:
+            xi = -1
+            dx = -dx
+
+        D = (2 * dx) - dy
+        x = x0
+
+        for y in range(y0, y1):
+            ii.append(x)
+            jj.append(y)
+            if D > 0:
+                x = x + xi
+                D = D + (2 * (dx - dy))
+                ii.append(x)
+                jj.append(y)
+            else:
+                D = D + 2*dx
+
+        return ii, jj
+
+    if abs(y1 - y0) < abs(x1 - x0):
+        if x0 > x1:
+            ii, jj = plotLineLow(x1, y1, x0, y0)
+        else:
+            ii, jj = plotLineLow(x0, y0, x1, y1)
+    else:
+        if y0 > y1:
+            ii, jj = plotLineHigh(x1, y1, x0, y0)
+        else:
+            ii, jj = plotLineHigh(x0, y0, x1, y1)
+    
     return ii, jj
 
 def transport_calculations(runid, endyear, endmonth, endday, startyear=2004, startmonth=1, startday=5):
@@ -98,11 +142,11 @@ def transport_calculations(runid, endyear, endmonth, endday, startyear=2004, sta
 
     #open the text files and get lists of the .nc output filepaths
     with open(gridT_txt) as f: lines = f.readlines()
-    filepaths_gridT = [line.strip() for line in lines]
+    filepaths_gridT = [line.strip() for line in lines][:3]
     with open(gridU_txt) as f: lines = f.readlines()
-    filepaths_gridU = [line.strip() for line in lines]
+    filepaths_gridU = [line.strip() for line in lines][:3]
     with open(gridV_txt) as f: lines = f.readlines()
-    filepaths_gridV = [line.strip() for line in lines]
+    filepaths_gridV = [line.strip() for line in lines][:3]
 
     #open the files and look at e3t and votemper
     #DS = xr.open_mfdataset(filepaths_gridT,preprocess=preprocess_gridT)
@@ -156,8 +200,8 @@ def transport_calculations(runid, endyear, endmonth, endday, startyear=2004, sta
     #section = 'nares_strait'
     #ii, jj = section_calculation(197,214,537,522)
 
-    #section = 'labrador_current_2'
-    #ii, jj = section_calculation(174, 199, 330, 308)
+    section = 'labrador_current_2'
+    ii, jj = section_calculation(174, 199, 330, 308)
 
     #section = 'siberian_shelf'
     #ii, jj = section_calculation(335,391,687,671)
@@ -165,27 +209,27 @@ def transport_calculations(runid, endyear, endmonth, endday, startyear=2004, sta
     #section = 'barrow_strait'
     #ii, jj = section_calculation(156,164,550,550)
 
-    print('test point')
+    #print('test point')
 
-    section = 'fram_south'
-    ii, jj = section_calculation(327,336,508,510)
+    #section = 'fram_south'
+    #ii, jj = section_calculation(327,336,508,510)
 
-    print(ii)
+    #print(ii)
 
-    section = 'ANHA4_LS2000mIsobath'
-    with open('LS2k_section_jjii.csv', newline='') as file:
-        jjii = list(csv.reader(file))
+    #section = 'ANHA4_LS2000mIsobath'
+    #with open('LS2k_section_jjii.csv', newline='') as file:
+    #    jjii = list(csv.reader(file))
 
-    jj = []
-    ii = []
-    for n in jjii:
-        x = n[0]
-        y = n[1]
-        jj.append(int(y))
-        ii.append(int(x))
+    #jj = []
+    #ii = []
+    #for n in jjii:
+    #    x = n[0]
+    #    y = n[1]
+    #    jj.append(int(y))
+    #    ii.append(int(x))
 
-    print(ii)
-    quit()
+    #print(ii)
+    #quit()
 
 
 
@@ -317,9 +361,7 @@ def transport_calculations(runid, endyear, endmonth, endday, startyear=2004, sta
     du.close()
 
 if __name__ == "__main__":
-    
-
     #transport_calculations(runid='EPM155', endyear=2018, endmonth=12, endday=31)
-    transport_calculations(runid='EPM156', endyear=2018, endmonth=12, endday=31)
-    transport_calculations(runid='EPM157', endyear=2018, endmonth=12, endday=31)
+    #transport_calculations(runid='EPM156', endyear=2018, endmonth=12, endday=31)
+    #transport_calculations(runid='EPM157', endyear=2018, endmonth=12, endday=31)
     transport_calculations(runid='EPM158', endyear=2018, endmonth=12, endday=31)

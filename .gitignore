@@ -28,6 +28,8 @@
 !currentVel_map.py
 !transports.py
 !sectionMap.py
+!section.py
+!crossSection.py
 
 # Files in masks
 !ANHA4_mesh_mask.nc 

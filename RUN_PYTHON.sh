@@ -5,7 +5,7 @@
 ##          Copied 27 Feb 2023 by rowan2@ualberta.ca                  ##
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
 #SBATCH -A rrg-pmyers-ad
-#SBATCH -J transports_151_LS2k
+#SBATCH -J transports_158_tp3
 #SBATCH --ntasks=1
 #SBATCH --mem=10000
 #SBATCH -t 0-23:00 
@@ -19,5 +19,5 @@ module load gdal/3.5.1
 module load python/3.10
 
 source /home/rowan/snakes2/bin/activate
-python /home/rowan/projects/rrg-pmyers-ad/rowan/NEMO-analysis-Graham/transports2.py 
+python /home/rowan/projects/rrg-pmyers-ad/rowan/NEMO-analysis-Graham/transports3.py 
 #python -m memory_profiler /home/rowan/projects/rrg-pmyers-ad/rowan/NEMO-analysis-Graham/EKE.py
