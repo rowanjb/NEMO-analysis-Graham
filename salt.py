@@ -111,7 +111,7 @@ for d in [50, 200, 1000, 2000]: #loop through depths
     vosaline_avg_region = vosaline_region_weighted.mean(dim=['deptht','y_grid_T','x_grid_T'],skipna=True)
     vosaline_avg_region.to_netcdf(run + '_salt/' + run + '_vosaline_spaceAvg_' + mask_choice + str(d) + '.nc')
 
-    #heat content
+    #salt content
     FWC = ((refS - DS_d.vosaline)/refS) * volumes 
     FWC_sum_deptht = FWC.sum(dim='deptht')
     FWC_avg_time = FWC_sum_deptht.mean(dim='time_counter')

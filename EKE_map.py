@@ -24,7 +24,7 @@ def eke_map(mask, run1, run2=False):
         minmax = LSmap.xrLSminmax(da,da.nav_lat_grid_T,da.nav_lon_grid_T)
 
         if run2!=False:
-            CBlabel = '$\Delte$EKE ($J$)'
+            CBlabel = '$\Delta$EKE ($J$)'
         else:
             CBlabel = 'EKE ($J$)'
 
@@ -42,10 +42,10 @@ def eke_map(mask, run1, run2=False):
         LSmap.LSmap(da,da.nav_lon_grid_T,da.nav_lat_grid_T,minmax,CBlabel,title,fileName)#,scale='log')
 
 if __name__ == "__main__":
-    eke_map(mask='LS', run1='EPM151')
-    eke_map(mask='LS', run1='EPM152')
-    eke_map(mask='LS', run1='EPM155')
-    eke_map(mask='LS', run1='EPM156')
-    eke_map(mask='LS', run1='EPM157')
-    eke_map(mask='LS', run1='EPM158')
+    eke_map(mask='LS', run1='EPM151', run2='EPM155')
+    eke_map(mask='LS', run1='EPM151', run2='EPM157')
+    eke_map(mask='LS', run1='EPM155', run2='EPM157')
+    eke_map(mask='LS', run1='EPM152', run2='EPM156')
+    eke_map(mask='LS', run1='EPM152', run2='EPM158')
+    eke_map(mask='LS', run1='EPM156', run2='EPM158')
 
