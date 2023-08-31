@@ -1,3 +1,0 @@
-#!/bin/sh
-PATH=/project/6007519/pmyers/WANHA4-EPM155/CONFIG/ANHA4-EPM155/BLD/bin:$PATH
-export PATH
