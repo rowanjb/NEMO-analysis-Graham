@@ -30,6 +30,9 @@
 !sectionMap.py
 !section.py
 !crossSection.py
+!print_interp_test_coords.py
+!*.py
+!*.sh
 
 # Files in masks
 !ANHA4_mesh_mask.nc 
@@ -39,6 +42,8 @@
 !maskLSmap.py mask_LS.nc 
 !maskMaker.py 
 !maskMap.py_
+!*.py
+!*.sh
 
 #...and also consider files in sub-directories
 !*/
