@@ -1,4 +1,4 @@
-#I use this to make sections for leter calculations (i.e., transports, cross sections)
+#Throw-away script for making sections for later calculations (i.e., transports, cross sections)
 
 import matplotlib.pyplot as plt
 import matplotlib.path as mpath
@@ -10,7 +10,6 @@ import numpy as np
 import transports as tp
 import xarray as xr
 import csv
-
 
 #for making a map to visualize the sections
 westLon = -70 #-90

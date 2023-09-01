@@ -4,7 +4,8 @@ def ANHA_print_coords():
     '''Throw-away script that I made for testing how I would interpolate to get U and V 
     co-located on the t grid. It prints out some example coordinates before and after
     interpolating. Can use a distance-between-coordinates calculator to verify how far 
-    apart the coordinates are.'''
+    apart the coordinates are. For ANHA4, they're usually within 5-10m, which seems close
+    enough.'''
 
     #opening the t grid
     with xr.open_dataset('masks/ANHA4_mesh_mask.nc') as DS:

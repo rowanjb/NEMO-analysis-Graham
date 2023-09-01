@@ -140,17 +140,17 @@ def crossSectionVelocity(run,section):
     dat = dat.rename({'deptht': 'z', 'x_grid_T': 'x', 'y_grid_T': 'y', 'nav_lat_grid_T': 'lat', 'nav_lon_grid_T': 'lon'})
 
     if section == 'OSNAP':
-            iLogOri = [170, 190, 199, 212, 220, 223] #osnap vertices
-            jLogOri = [329, 332, 337, 372, 376, 379]
-            #vertices_lon = [-57.007767, -51.974033, -49.78329, -47.538982, -45.512913, -44.8054]
-            #vertices_lat = [52.07664, 52.875805, 53.789803, 59.202328, 59.93713, 60.424892]
-            vertices_lon = dat.lon[jLogOri[0], iLogOri[0]].to_numpy() #converting to coordinates
-            vertices_lat = dat.lat[jLogOri[0], iLogOri[0]].to_numpy()
-            for n in range(len(iLogOri)-1):
-                    next_lon = dat.lon[jLogOri[n+1], iLogOri[n+1]].to_numpy()
-                    vertices_lon = np.append(vertices_lon, next_lon)
-                    next_lat = dat.lat[jLogOri[n+1], iLogOri[n+1]].to_numpy()
-                    vertices_lat = np.append(vertices_lat, next_lat)
+        iLogOri = [170, 190, 199, 212, 220, 223] #osnap vertices
+        jLogOri = [329, 332, 337, 372, 376, 379]
+        #vertices_lon = [-57.007767, -51.974033, -49.78329, -47.538982, -45.512913, -44.8054]
+        #vertices_lat = [52.07664, 52.875805, 53.789803, 59.202328, 59.93713, 60.424892]
+        vertices_lon = dat.lon[jLogOri[0], iLogOri[0]].to_numpy() #converting to coordinates
+        vertices_lat = dat.lat[jLogOri[0], iLogOri[0]].to_numpy()
+        for n in range(len(iLogOri)-1):
+            next_lon = dat.lon[jLogOri[n+1], iLogOri[n+1]].to_numpy()
+            vertices_lon = np.append(vertices_lon, next_lon)
+            next_lat = dat.lat[jLogOri[n+1], iLogOri[n+1]].to_numpy()
+            vertices_lat = np.append(vertices_lat, next_lat)
     elif section == 'AR7W':
         vertices_lon = [-55.033333, -48.250000]
         vertices_lat = [54.750000, 60.533333]
@@ -163,7 +163,7 @@ def crossSectionVelocity(run,section):
 
     #first, velocities are co-located on the T grid:
     #(note x and y aren't needed as new variables, so they're dropped)
-    dau = dau.interp(x=dau.x+0.5).drop_vars('x')
+    dau = dau.interp(x=dau.x-0.5).drop_vars('x')
     dav = dav.interp(y=dav.y-0.5).drop_vars('y')
     
     dau['lat'] = dat.lat
@@ -186,48 +186,20 @@ def crossSectionVelocity(run,section):
 
 if __name__ == "__main__":
     variable = 'vel'
-
-    run = 'EPM151'
-    section = 'AR7W'
-    cross = crossSectionVelocity(run, section)
-    cross.to_netcdf(run + '_crossSection/' + run + '_' + section + '_' + variable + '.nc')
-
-    run = 'EPM152'
-    section = 'AR7W'
-    cross = crossSectionVelocity(run, section)
-    cross.to_netcdf(run + '_crossSection/' + run + '_' + section + '_' + variable + '.nc')
-
-    run = 'EPM155'
-    section = 'AR7W'
-    cross = crossSectionVelocity(run, section)
-    cross.to_netcdf(run + '_crossSection/' + run + '_' + section + '_' + variable + '.nc')
-
-    run = 'EPM156'
-    section = 'AR7W'
-    cross = crossSectionVelocity(run, section)
-    cross.to_netcdf(run + '_crossSection/' + run + '_' + section + '_' + variable + '.nc')
-
-    run = 'EPM157'
-    section = 'AR7W'
-    cross = crossSectionVelocity(run, section)
-    cross.to_netcdf(run + '_crossSection/' + run + '_' + section + '_' + variable + '.nc')
-
-    run = 'EPM158'
-    section = 'AR7W'
-    cross = crossSectionVelocity(run, section)
-    cross.to_netcdf(run + '_crossSection/' + run + '_' + section + '_' + variable + '.nc')
-
-    quit()
+    for section in ['AR7W','OSNAP']:    
+        for run in ['EPM151','EPM152','EPM155','EPM156','EPM157','EPM158']:
+            cross = crossSectionVelocity(run, section)
+            cross.to_netcdf(run + '_crossSection/' + run + '_' + section + '_' + variable + '.nc')
 
 
     #crossV = crossSection(variable='vomecrty',run='EPM151',section='OSNAP')
     #crossU = crossSection(variable='vozocrtx',run='EPM151',section='OSNAP')
     #crossS = crossSectionGridT(variable='vosaline',run='EPM151',section='OSNAP')
-    crossVel = crossSectionVelocity(run,section)
-    crossVel.to_netcdf(run + '_crossSection/' + run + '_' + section + '_vel.nc')
+    #crossVel = crossSectionVelocity(run,section)
+    #crossVel.to_netcdf(run + '_crossSection/' + run + '_' + section + '_vel.nc')
 
-    run = 'EPM158'
-    section = 'OSNAP'
-    crossVel = crossSectionVelocity(run,section)
-    crossVel.to_netcdf(run + '_crossSection/' + run + '_' + section + '_vel.nc')
+    #run = 'EPM158'
+    #section = 'OSNAP'
+    #crossVel = crossSectionVelocity(run,section)
+    #crossVel.to_netcdf(run + '_crossSection/' + run + '_' + section + '_vel.nc')
 
