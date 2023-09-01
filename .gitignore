@@ -33,7 +33,6 @@
 !print_interp_test_coords.py
 !*.py
 !*.sh
-!*.m
 
 # Files in masks
 !ANHA4_mesh_mask.nc 
@@ -45,7 +44,6 @@
 !maskMap.py_
 !*.py
 !*.sh
-!*.m
 
 #...and also consider files in sub-directories
 !*/
