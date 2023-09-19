@@ -135,7 +135,7 @@ def EKE(run,mask_choice):
 
 if __name__ == '__main__':
     
-    run = 'EPM158'
+    run = 'EPM152'
     mask_choice = 'LS'
     EKE(run,mask_choice)
 

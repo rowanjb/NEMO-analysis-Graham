@@ -90,6 +90,9 @@ if __name__ == "__main__":
     for variable in ['votemper','vel','vosaline']:
         for section in ['OSNAP','AR7W']:
             profilePlot(variable,section,run1='EPM156',run2='EPM158')
-
+    for variable in ['votemper','vel','vosaline']:
+        for section in ['OSNAP','AR7W']:
+            for run in ['EPM151','EPM152','EPM155','EPM156','EPM157','EPM158']:
+                profilePlot(variable,section,run1=run)
 
 
