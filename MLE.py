@@ -23,8 +23,7 @@ nn_mld_uv = 0 #! space interpolation of MLD at u- & v-pts (0=min,1=averaged,2=ma
 nn_conv = 0 #! =1 no MLE in case of convection ; =0 always MLE
 rn_rho_c_mle = 0.01 #! delta rho criterion used to calculate MLD for FK
 
-
-def Q(run,mask):
+def Q(run,mask,movie=False):
 
     #== creating directory if doesn't already exist ==#
     dir = run + '_MLE/'
@@ -34,7 +33,8 @@ def Q(run,mask):
     #== opening and pre-processing model output ==#
     gridT_txt = run + '_filepaths/' + run + '_gridT_filepaths.txt'
     with open(gridT_txt) as f: lines = f.readlines()
-    filepaths_gridT = [line.strip() for line in lines]
+    filepaths_gridT = [line.strip() for line in lines][500:]
+    num_files = len(filepaths_gridT)
     preprocess_gridT = lambda ds: ds[['votemper','vosaline','somxl010']]
     DST = xr.open_mfdataset(filepaths_gridT,preprocess=preprocess_gridT,engine="netcdf4")
     DST = DST.rename({'x_grid_T':'x','y_grid_T':'y'})
@@ -85,10 +85,18 @@ def Q(run,mask):
     Q = Q.where(DST.mask[:-1,:-1], drop=True)
 
     #== saving ==#
-    Q['map'] = Q.mean(dim='time_counter')
-    Q.map.to_netcdf(run + '_MLE/' + run + '_MLE_Q_map_' + mask + '.nc')
-    Q['timeplot'] = Q.sum(dim=['x','y'],skipna=True)
-    Q.timeplot.to_netcdf(run + '_MLE/' + run + '_MLE_Q_timeplot_sum_' + mask + '.nc') 
+    if movie==False:
+        Q['map'] = Q.mean(dim='time_counter')
+        Q.map.to_netcdf(run + '_MLE/' + run + '_MLE_Q_map_' + mask + '.nc')
+        Q['timeplot'] = Q.sum(dim=['x','y'],skipna=True)
+        Q.timeplot.to_netcdf(run + '_MLE/' + run + '_MLE_Q_timeplot_sum_' + mask + '.nc') 
+    else:
+        dir2 = run + '_MLE/movie_NCs'
+        if not os.path.exists(dir2):
+            os.makedirs(dir2)
+        for i in range(num_files):
+            date = str(Q.time_counter[i].to_numpy())[0:10]
+            Q.isel(time_counter=i).to_netcdf(dir2 + '/' + run + '_MLE_Q_map_' + mask + '_' + date + '.nc')
 
 def MLE(run,mask):
 
@@ -267,8 +275,8 @@ def MLE(run,mask):
     #deptht: 50, y_grid_T: 199, x_grid_T: 149)
 
 if __name__ == '__main__':
-    for i in ['LS2k','LSCR','LS']:
-        Q(run='EPM151',mask=i)
+    for i in ['LS']:#,'LSCR','LS']:
+        Q(run='EPM157',mask=i,movie=True)
 
     #MLE(run='EPM158',mask='LSCR')
     #MLE(run='EPM158',mask='LS2k')

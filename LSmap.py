@@ -135,8 +135,8 @@ def LSmap(xrData,lons,lats,minmax,CBlabel,title,fileName,scale='normal'):
                 lt = 10
                 p1 = ax.pcolormesh(lons, lats, xrData, transform=ccrs.PlateCarree(), cmap=cm, norm=colors.SymLogNorm(linthresh=lt, linscale=1, vmin=min, vmax=max, clip=True))
                 p1.set_clim(0,max)
-                ax_cb = plt.axes([0.78, 0.25, 0.022, 0.5])
-                formatter = mticker.LogFormatter(base=10, labelOnlyBase=False, minor_thresholds=(50,40), linthresh=lt)
+                ax_cb = plt.axes([0.88, 0.25, 0.022, 0.5])
+                formatter = mticker.LogFormatter(base=5, labelOnlyBase=False, minor_thresholds=(50,40), linthresh=lt)
                 cb = plt.colorbar(p1,cax=ax_cb, orientation='vertical', format=formatter)
                 #cb.ax.mappable.set_clim(vmin=0,vmax=max)
                 cb.ax.set_ylabel(CBlabel)

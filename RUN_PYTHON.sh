@@ -5,10 +5,10 @@
 ##          Copied 27 Feb 2023 by rowan2@ualberta.ca                  ##
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
 #SBATCH -A rrg-pmyers-ad
-#SBATCH -J EPM151_MLE_Q
+#SBATCH -J MLE_EPM157_movieNCs
 #SBATCH --ntasks=1
-#SBATCH --mem=9000
-#SBATCH -t 0-10:00 
+#SBATCH --mem=30000
+#SBATCH -t 0-47:00 
 #SBATCH -o slurm-mem-%j.out
 #SBATCH -e slurm-mem-%j.err
 #SBATCH --mail-type=ALL

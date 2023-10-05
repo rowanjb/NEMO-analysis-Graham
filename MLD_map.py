@@ -4,6 +4,7 @@ import xarray as xr
 import LSmap 
 import numpy as np 
 import math
+import os
 
 def mld_map(variable, mask, run1, run2=False):
     
@@ -32,6 +33,36 @@ def mld_map(variable, mask, run1, run2=False):
     
     LSmap.LSmap(da,da.nav_lon_grid_T,da.nav_lat_grid_T,minmax,CBlabel,title,fileName)#,scale='log')
 
+def mld_movie_frames(mask, run1):
+    folder = run1 + '_MLD/movie_NCs/'
+    movie_files = sorted([folder + file for file in os.listdir(folder)])
+    for i in movie_files:
+        date = i[-13:-3]
+        da = xr.open_dataarray(i)
+        #minmax = LSmap.xrLSminmax(da,da.nav_lat_grid_T,da.nav_lon_grid_T)
+        CBlabel = 'MLD ($m$)'
+        title = 'Mixed layer depth in the Labrador Sea\n' + run1 + ' - ' + date
+        folder = run1 + '_MLD/movie_frames' 
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        filename = folder + '/' + run1 + '_MLD_map_' + date
+        LSmap.LSmap(da,da.nav_lon_grid_T,da.nav_lat_grid_T,(0,2500),CBlabel,title,filename)
+
 if __name__ == "__main__":
-    mld_map(variable='avg_MLD', mask='LS', run1='EPM158')
-    mld_map(variable='max_MLD', mask='LS', run1='EPM158')
+    #mld_map(variable='avg_MLD', mask='LS', run1='EPM158')
+    #mld_map(variable='max_MLD', mask='LS', run1='EPM158')
+    for i in ['EPM151','EPM152','EPM155','EPM156','EPM157','EPM158']:
+        mld_movie_frames(mask='LS', run1=i)
+
+#def mle_movie_frames(mask, run1):
+#    folder = run1 + '_MLE/movie_NCs/'
+#    movie_files = sorted([folder + file for file in os.listdir(folder)])
+#    for i in movie_files:
+#        date = i[-13:-3]
+#        da = xr.open_dataarray(i)
+#        #minmax = LSmap.xrLSminmax(da,da.nav_lat_grid_T,da.nav_lon_grid_T)
+#        CBlabel = 'Heat flux ($J/S$?)'
+#        title = 'Average heat flux through the bottom of the mixed layer, \n' + run1 + ' - ' + date
+#        fileName  = run1 + '_MLE/movie_frames/' + run1 + '_MLE_Q_map_' + date
+#        LSmap.LSmap(da,da.nav_lon_grid_T,da.nav_lat_grid_T,(0,5000),CBlabel,title,fileName)#,scale='log')
+
